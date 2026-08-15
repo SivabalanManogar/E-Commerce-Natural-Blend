@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cat-home",
+    "name": "Home Care",
+    "imageUrl": "/images/products/mi_home_dishwash_bar.png",
+    "active": true
+  },
+  {
+    "id": "cat-oral",
+    "name": "Oral Care",
+    "imageUrl": "/images/products/onon_herbal_toothpaste.png",
+    "active": true
+  },
+  {
+    "id": "cat-personal",
+    "name": "Personal Care",
+    "imageUrl": "/images/products/neem_alovera_soap.jpg",
+    "active": true
+  },
+  {
+    "id": "cat-hair",
+    "name": "Hair Care",
+    "imageUrl": "/images/products/56_herbs_hair_oil.jpg",
+    "active": true
+  },
+  {
+    "id": "cat-food",
+    "name": "Food & Wellness",
+    "imageUrl": "/images/products/thirumathy_protein_coffee.jpg",
+    "active": true
+  },
+  {
+    "id": "cat-other",
+    "name": "Other",
+    "imageUrl": null,
+    "active": true
+  }
+]

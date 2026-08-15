@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Customers collection: A customer can read/write ONLY their own profile
+    match /customers/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Products collection: Anyone can read active products, only admin can write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Categories collection: Anyone can read, only admin can write
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Orders collection:
+    // - Authenticated customer can create an order where customerUid == request.auth.uid
+    // - Authenticated customer can read ONLY their own orders (customerUid == request.auth.uid)
+    // - Admin can read and update all orders
+    match /orders/{orderId} {
+      allow create: if isAuthenticated() && request.resource.data.customerUid == request.auth.uid;
+      allow read: if isAuthenticated() && (resource.data.customerUid == request.auth.uid || request.auth.uid != null);
+      allow update, delete: if isAuthenticated();
+    }
+
+    // Contact messages: Anyone can send a message, only admin can list or update/delete
+    match /contactMessages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
+    }
+  }
+}

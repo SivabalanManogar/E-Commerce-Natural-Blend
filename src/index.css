@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+/* Custom scrollbar and smooth transitions */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+background: rgba(16, 41, 29, 0.82);
+backdrop-filter: blur(20px) saturate(140%);
+-webkit-backdrop-filter: blur(20px) saturate(140%);
+border: 1px solid rgba(255, 255, 255, 0.12);
+box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+}
+
+/* Button Classes */
+.btn-primary-liquid {
+  background-color: #246B45;
+  color: #FFFFFF;
+  border-radius: 14px;
+  font-weight: 700;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(36, 107, 69, 0.25);
+}
+
+.btn-primary-liquid:hover {
+  background-color: #173D2B;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(23, 61, 43, 0.35);
+}
+
+.btn-secondary-liquid {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(23, 61, 43, 0.15);
+  color: #173D2B;
+  border-radius: 14px;
+  font-weight: 700;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-secondary-liquid:hover {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(23, 61, 43, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Input Fields */
+.input-glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(23, 61, 43, 0.12);
+  color: #18231D;
+  transition: all 0.2s ease-in-out;
+}
+
+.input-glass::placeholder {
+  color: #87958B;
+}
+
+.input-glass:focus {
+  outline: none;
+  border-color: #246B45;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(36, 107, 69, 0.12);
+}
+
+/* Moving Liquid Background Animations */
+@keyframes liquidGradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-liquid-gradient {
+  background: linear-gradient(-45deg, #F5F7F2, #E5EEE5, #DCE9DE, #EEF2EA, #E1EFE3);
+  background-size: 350% 350%;
+  animation: liquidGradientMove 10s ease infinite;
+}
+
+@keyframes blobFloat1 {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(45px, -50px) scale(1.2);
+  }
+
+  66% {
+    transform: translate(-30px, 30px) scale(0.85);
+  }
+}
+
+@keyframes blobFloat2 {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(-50px, 40px) scale(0.85);
+  }
+
+  66% {
+    transform: translate(35px, -45px) scale(1.15);
+  }
+}
+
+.animate-blob-1 {
+  animation: blobFloat1 14s ease-in-out infinite;
+}
+
+.animate-blob-2 {
+  animation: blobFloat2 18s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes floatSoft {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop-in {
+  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-float-soft {
+  animation: floatSoft 4s ease-in-out infinite;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
