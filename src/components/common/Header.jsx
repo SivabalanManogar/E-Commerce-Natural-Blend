@@ -56,38 +56,7 @@ export default function Header() {
   const photoURL = customerUser?.photoURL || customerProfile?.photoURL;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-emerald-100 shadow-xs">
-      {/* Top Banner */}
-      <div className="bg-emerald-950 text-emerald-100 px-4 py-1.5 text-xs">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1 font-medium">
-              <Leaf className="w-3.5 h-3.5 text-emerald-400" /> Natural Blend | Owned by M. Kavitha M.Sc
-            </span>
-            <span className="hidden sm:inline-block text-emerald-400">•</span>
-            <span className="hidden md:flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-emerald-400" /> Karaikudi, Tamil Nadu
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 ml-auto">
-            <a
-              href="tel:6381109883"
-              className="flex items-center gap-1 hover:text-white transition-colors"
-            >
-              <Phone className="w-3 h-3 text-emerald-400" /> Call: 6381109883
-            </a>
-            {isAdmin && (
-              <Link
-                to="/admin/dashboard"
-                className="bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-0.5 rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
-              >
-                <ShieldCheck className="w-3 h-3" /> Admin Dashboard
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#DCE6E0] shadow-xs">
 
       {/* Main Header Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 font-sans">
@@ -187,6 +156,16 @@ export default function Header() {
                     >
                       <Package className="w-3.5 h-3.5 text-emerald-600" /> My Orders
                     </Link>
+
+                    {isAdmin && (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 hover:bg-[#DDEFE6] font-bold text-[#176B4D] border-b border-[#DCE6E0]"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#176B4D]" /> Admin Dashboard
+                      </Link>
+                    )}
 
                     <button
                       onClick={handleLogout}
