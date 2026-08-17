@@ -12,7 +12,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import OrderStatusTracker from '../../components/customer/OrderStatusTracker';
-import { getCustomerOrders, deleteOrder } from '../../services/orderService';
+import { getCustomerOrders, subscribeToCustomerOrders, deleteOrder, restoreOrder } from '../../services/orderService';
 import { useAuth } from '../../context/AuthContext';
 
 export default function MyOrdersPage() {
@@ -33,21 +33,22 @@ export default function MyOrdersPage() {
     }
   }, [isCustomerLoggedIn, navigate]);
 
-  const fetchOrders = async () => {
-    if (!customerUser || !customerUser.uid) return;
-    setLoading(true);
-    try {
-      const list = await getCustomerOrders(customerUser.uid);
-      setOrders(list);
-    } catch (err) {
-      console.error('Error fetching customer orders:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Realtime subscription to customer orders
   useEffect(() => {
-    fetchOrders();
+    if (!customerUser || !customerUser.uid) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const unsubscribe = subscribeToCustomerOrders(customerUser.uid, (list) => {
+      setOrders(list);
+      setLoading(false);
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [customerUser]);
 
   // Clean up interval on unmount
@@ -59,19 +60,25 @@ export default function MyOrdersPage() {
     };
   }, []);
 
-  const handleDeleteClick = (orderToDelete, index) => {
-    // 1. If an existing undo is active, commit it immediately first
+  const handleDeleteClick = async (orderToDelete, index) => {
     if (undoState) {
-      finalizeDeletion(undoState.order);
+      setUndoState(null);
     }
 
-    // 2. Hide order locally
     const targetId = orderToDelete.id || orderToDelete.orderId;
+
+    // 1. Hide order locally in UI
     setOrders(prev => prev.filter(o => (o.id || o.orderId) !== targetId));
 
-    // 3. Setup 10-second countdown
-    let secondsLeft = 10;
+    // 2. Immediately delete from Firestore & LocalStorage so page refresh never resurrects it!
+    try {
+      await deleteOrder(targetId);
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    }
 
+    // 3. Setup 10-second countdown for UNDO
+    let secondsLeft = 10;
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
     }
@@ -80,7 +87,6 @@ export default function MyOrdersPage() {
       secondsLeft -= 1;
       if (secondsLeft <= 0) {
         clearInterval(intervalId);
-        finalizeDeletion(orderToDelete);
         setUndoState(null);
       } else {
         setUndoState(prev => prev ? { ...prev, countdown: secondsLeft } : null);
@@ -96,8 +102,10 @@ export default function MyOrdersPage() {
     });
   };
 
-  const handleUndo = () => {
+  const handleUndo = async () => {
     if (!undoState) return;
+
+    const orderToRestore = undoState.order;
 
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
@@ -106,54 +114,52 @@ export default function MyOrdersPage() {
     // Restore order to list
     setOrders(prev => {
       const restored = [...prev];
-      restored.splice(undoState.index, 0, undoState.order);
+      restored.splice(undoState.index, 0, orderToRestore);
       return restored;
     });
 
     setUndoState(null);
-  };
 
-  const finalizeDeletion = async (orderToFinalize) => {
+    // Re-create order in Firestore & LocalStorage
     try {
-      const targetId = orderToFinalize.id || orderToFinalize.orderId;
-      await deleteOrder(targetId);
+      await restoreOrder(orderToRestore);
     } catch (err) {
-      console.error('Error finalizing order deletion:', err);
+      console.error('Error restoring order via UNDO:', err);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-16 relative">
+    <div className="max-w-4xl mx-auto space-y-8 pb-16 relative font-sans text-[#17251F]">
       {/* Header */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#DCE6E0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 bg-[#DDEFE6] text-[#176B4D] rounded-2xl flex items-center justify-center shrink-0 border border-[#DCE6E0]">
             <Package className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0D4A35] tracking-tight">
               My Orders & Tracking
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#64756D] mt-0.5">
               Order history for authenticated account ({customerUser?.email})
             </p>
           </div>
         </div>
 
-        <span className="bg-emerald-50 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1.5">
-          <Lock className="w-3.5 h-3.5 text-emerald-600" /> Private Account Access
+        <span className="bg-[#DDEFE6] text-[#0D4A35] text-xs font-bold px-3 py-1.5 rounded-full border border-[#DCE6E0] flex items-center gap-1.5">
+          <Lock className="w-3.5 h-3.5 text-[#176B4D]" /> Private Account Access
         </span>
       </div>
 
       {/* Undo Floating Notification Banner (10s countdown) */}
       {undoState && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 text-xs border border-slate-700 animate-bounce">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0D4A35] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 text-xs border border-[#176B4D] animate-bounce">
           <span>Order <strong>#{undoState.order.orderId}</strong> deleted.</span>
           <button
             onClick={handleUndo}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
+            className="bg-[#176B4D] hover:bg-emerald-700 text-white font-black px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 shadow-md"
           >
-            <RotateCcw className="w-4 h-4" /> UNDO ({undoState.countdown}s)
+            <RotateCcw className="w-4 h-4 text-[#C89B3C]" /> UNDO ({undoState.countdown}s)
           </button>
         </div>
       )}
@@ -162,27 +168,27 @@ export default function MyOrdersPage() {
       {loading ? (
         <div className="space-y-4 animate-pulse">
           {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-48 bg-slate-100 rounded-3xl" />
+            <div key={i} className="h-48 bg-[#F8FAF6] rounded-3xl border border-[#DCE6E0]" />
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-xs max-w-md mx-auto space-y-4">
-          <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+        <div className="bg-white rounded-3xl p-12 text-center border border-[#DCE6E0] shadow-xs max-w-md mx-auto space-y-4">
+          <div className="w-16 h-16 bg-[#F8FAF6] text-[#64756D] rounded-full flex items-center justify-center mx-auto border border-[#DCE6E0]">
             <ShoppingBag className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-slate-900">
+            <h3 className="text-base font-extrabold text-[#0D4A35]">
               You haven't placed any orders yet
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[#64756D] mt-1">
               Start shopping our natural care catalog today!
             </p>
           </div>
           <Link
             to="/products"
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-3 rounded-2xl transition-colors"
+            className="inline-flex items-center gap-2 bg-[#176B4D] hover:bg-[#0D4A35] text-white text-xs font-bold px-6 py-3 rounded-2xl transition-colors"
           >
-            Start Shopping <ArrowRight className="w-4 h-4" />
+            Start Shopping <ArrowRight className="w-4 h-4 text-[#C89B3C]" />
           </Link>
         </div>
       ) : (
@@ -190,30 +196,30 @@ export default function MyOrdersPage() {
           {orders.map((order, idx) => (
             <div
               key={order.id || order.orderId}
-              className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-xs space-y-6"
+              className="bg-white rounded-3xl p-6 sm:p-8 border border-[#DCE6E0] shadow-xs space-y-6"
             >
               {/* Order Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#DCE6E0] pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-slate-900">Order #{order.orderId}</span>
+                    <span className="text-lg font-black text-[#0D4A35]">Order #{order.orderId}</span>
                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${order.status === 'Pending' ? 'bg-amber-50 text-amber-800 border-amber-200' :
-                        order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                          order.status === 'Cancelled' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-                            'bg-blue-50 text-blue-800 border-blue-200'
+                      order.status === 'Delivered' ? 'bg-[#DDEFE6] text-[#0D4A35] border-[#DCE6E0]' :
+                        order.status === 'Cancelled' ? 'bg-rose-50 text-[#C94A4A] border-rose-200' :
+                          'bg-blue-50 text-blue-800 border-blue-200'
                       }`}>
-                      {order.status}
+                      {order.status === 'Cancelled' ? 'Cancelled 🔒' : order.status}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-[#64756D] flex items-center gap-1 mt-0.5">
                     <Calendar className="w-3.5 h-3.5" /> Placed on: {new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="text-left sm:text-right">
-                    <span className="text-xs text-slate-400 block">Grand Total</span>
-                    <span className="text-xl font-black text-emerald-950">₹{order.grandTotal}</span>
+                    <span className="text-xs text-[#64756D] block">Grand Total</span>
+                    <span className="text-xl font-black text-[#176B4D]">₹{order.grandTotal}</span>
                   </div>
 
                   {/* Customer Delete Button with 10s Undo */}

@@ -122,8 +122,8 @@ export default function AdminLayout() {
                 key={item.path}
                 to={item.path}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${isActive
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -140,7 +140,7 @@ export default function AdminLayout() {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <Outlet />
       </main>
     </div>

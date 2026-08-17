@@ -1,8 +1,24 @@
 @import "tailwindcss";
 
+:root {
+  --primary-green: #176B4D;
+  --dark-green: #0D4A35;
+  --light-green: #DDEFE6;
+  --gold: #C89B3C;
+  --bg-ivory: #F8FAF6;
+  --card-white: #FFFFFF;
+  --text-main: #17251F;
+  --text-secondary: #64756D;
+  --border-color: #DCE6E0;
+  --success-color: #287A52;
+  --error-color: #C94A4A;
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-ivory);
+    color: var(--text-main);
   }
 }
 
@@ -13,16 +29,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #F8FAF6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #DCE6E0;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #176B4D;
 }
 
 /* Animations */
@@ -55,7 +71,7 @@
 }
 
 .animate-liquid-gradient {
-  background: linear-gradient(-45deg, #F5F7F2, #E5EEE5, #DCE9DE, #EEF2EA, #E1EFE3);
+  background: linear-gradient(-45deg, #F8FAF6, #EAF3EE, #DDEFE6, #EAF3EE, #F4F8F5);
   background-size: 350% 350%;
   animation: liquidGradientMove 10s ease infinite;
 }
@@ -95,71 +111,71 @@
 
 /* Glassmorphism Panel Utilities */
 .glass-panel {
-  background: rgba(250, 251, 247, 0.78);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 10px 30px rgba(20, 50, 35, 0.04);
+  border: 1px solid #DCE6E0;
+  box-shadow: 0 10px 30px rgba(23, 107, 77, 0.05);
 }
 
 .glass-panel-dark {
-  background: rgba(16, 41, 29, 0.82);
+  background: rgba(13, 74, 53, 0.92);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
 }
 
 /* Button Classes */
 .btn-primary-liquid {
-  background-color: #246B45;
+  background-color: #176B4D;
   color: #FFFFFF;
   border-radius: 14px;
   font-weight: 700;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(36, 107, 69, 0.25);
+  box-shadow: 0 4px 14px rgba(23, 107, 77, 0.22);
 }
 
 .btn-primary-liquid:hover {
-  background-color: #173D2B;
+  background-color: #0D4A35;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(23, 61, 43, 0.35);
+  box-shadow: 0 6px 20px rgba(13, 74, 53, 0.32);
 }
 
 .btn-secondary-liquid {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(23, 61, 43, 0.15);
-  color: #173D2B;
+  border: 1px solid #DCE6E0;
+  color: #0D4A35;
   border-radius: 14px;
   font-weight: 700;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-secondary-liquid:hover {
-  background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(23, 61, 43, 0.3);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #176B4D;
   transform: translateY(-1px);
 }
 
 /* Input Fields */
 .input-glass {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(23, 61, 43, 0.12);
-  color: #18231D;
+  border: 1px solid #DCE6E0;
+  color: #17251F;
   transition: all 0.2s ease-in-out;
 }
 
 .input-glass::placeholder {
-  color: #87958B;
+  color: #64756D;
 }
 
 .input-glass:focus {
   outline: none;
-  border-color: #246B45;
+  border-color: #176B4D;
   background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(36, 107, 69, 0.12);
+  box-shadow: 0 0 0 3px rgba(23, 107, 77, 0.15);
 }

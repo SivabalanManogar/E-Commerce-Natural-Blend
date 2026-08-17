@@ -169,24 +169,17 @@ export default function CartPage() {
                 <span>₹{deliveryCharge}</span>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
-                <span className="text-sm font-extrabold text-slate-900">Grand Total</span>
-                <span className="text-2xl font-black text-emerald-950">₹{grandTotal}</span>
+              <div className="pt-3 border-t border-[#DCE6E0] flex justify-between items-center">
+                <span className="text-sm font-extrabold text-[#0D4A35]">Grand Total</span>
+                <span className="text-2xl font-black text-[#176B4D]">₹{grandTotal}</span>
               </div>
-            </div>
-
-            {/* Delivery rule explanation note */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] text-slate-600 leading-tight space-y-1">
-              <p className="font-bold text-slate-800">Delivery Charge Formula:</p>
-              <p>• Up to 1kg (1000g) = ₹50</p>
-              <p>• Above 1kg = ₹50 + ₹20 per additional 500g (or part of 500g)</p>
             </div>
 
             <button
               onClick={() => navigate('/checkout')}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl text-sm font-extrabold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-98"
+              className="w-full bg-[#176B4D] hover:bg-[#0D4A35] text-white py-3.5 rounded-2xl text-sm font-extrabold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-98"
             >
-              Proceed to Checkout <ArrowRight className="w-4 h-4" />
+              Proceed to Checkout <ArrowRight className="w-4 h-4 text-[#C89B3C]" />
             </button>
           </div>
         </div>

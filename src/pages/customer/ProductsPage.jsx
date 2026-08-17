@@ -124,8 +124,8 @@ export default function ProductsPage() {
         <button
           onClick={() => handleCategorySelect('All')}
           className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === 'All'
-              ? 'bg-emerald-700 text-white shadow-xs'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            ? 'bg-emerald-700 text-white shadow-xs'
+            : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
         >
           All Categories ({products.length})
@@ -139,8 +139,8 @@ export default function ProductsPage() {
               key={cat.id || cat.name}
               onClick={() => handleCategorySelect(cat.name)}
               className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${isSelected
-                  ? 'bg-emerald-700 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                 }`}
             >
               {cat.name} ({count})

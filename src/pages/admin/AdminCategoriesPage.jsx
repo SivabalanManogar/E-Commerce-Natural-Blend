@@ -70,16 +70,16 @@ export default function AdminCategoriesPage() {
   };
 
   return (
-    <div className="space-y-6 font-sans bg-[#F5F7F2] text-[#18231D]">
+    <div className="space-y-6 font-sans bg-[#F8FAF6] text-[#17251F]">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-[#173D2B]">Manage Categories</h1>
-          <p className="text-xs text-[#65736A] mt-0.5">Add or modify store product categories.</p>
+          <h1 className="text-2xl font-black text-[#0D4A35]">Manage Categories</h1>
+          <p className="text-xs text-[#64756D] mt-0.5">Add or modify store product categories.</p>
         </div>
 
         <button
           onClick={openAddModal}
-          className="bg-[#246B45] hover:bg-[#173D2B] text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-colors flex items-center gap-1.5"
+          className="bg-[#176B4D] hover:bg-[#0D4A35] text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-colors flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" /> Add Category
         </button>
@@ -88,31 +88,31 @@ export default function AdminCategoriesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
           <div className="col-span-full py-8 text-center">
-            <Loader2 className="w-6 h-6 text-[#246B45] animate-spin mx-auto" />
+            <Loader2 className="w-6 h-6 text-[#176B4D] animate-spin mx-auto" />
           </div>
         ) : (
           categories.map(cat => (
-            <div key={cat.id || cat.name} className="glass-panel p-5 rounded-2xl border border-white/60 shadow-xs flex items-center justify-between">
+            <div key={cat.id || cat.name} className="glass-panel p-5 rounded-2xl border border-[#DCE6E0] shadow-xs flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#246B45]/10 text-[#246B45] flex items-center justify-center font-bold border border-[#246B45]/20">
+                <div className="w-10 h-10 rounded-xl bg-[#DDEFE6] text-[#176B4D] flex items-center justify-center font-bold border border-[#DCE6E0]">
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-[#173D2B]">{cat.name}</h3>
-                  <span className="text-[10px] text-[#65736A] font-medium">Category</span>
+                  <h3 className="font-bold text-sm text-[#0D4A35]">{cat.name}</h3>
+                  <span className="text-[10px] text-[#64756D] font-medium">Category</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => openEditModal(cat)}
-                  className="p-1.5 text-[#65736A] hover:text-[#246B45] hover:bg-white rounded-lg"
+                  className="p-1.5 text-[#64756D] hover:text-[#176B4D] hover:bg-white rounded-lg"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(cat.id, cat.name)}
-                  className="p-1.5 text-[#65736A] hover:text-[#D95C5C] hover:bg-rose-50 rounded-lg"
+                  className="p-1.5 text-[#64756D] hover:text-[#C94A4A] hover:bg-rose-50 rounded-lg"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

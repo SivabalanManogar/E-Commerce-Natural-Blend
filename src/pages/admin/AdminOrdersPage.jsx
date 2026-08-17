@@ -21,7 +21,9 @@ import {
   subscribeToOrders,
   updateOrderStatus,
   markOrderSeen,
-  deleteOrder
+  deleteOrder,
+  restoreOrder,
+  updateOrderDetails
 } from '../../services/orderService';
 import { db, doc, updateDoc } from '../../firebase/config';
 import { calculateDeliveryCharge } from '../../utils/delivery';
@@ -62,31 +64,48 @@ export default function AdminOrdersPage() {
   };
 
   const handleStatusChange = async (orderIdOrDocId, newStatus) => {
+    const targetOrder = orders.find(o => (o.id === orderIdOrDocId || o.orderId === orderIdOrDocId));
+    if (targetOrder && targetOrder.status === 'Cancelled') {
+      alert('This order has been cancelled and cannot be changed.');
+      return;
+    }
+
     setUpdating(true);
     try {
       await updateOrderStatus(orderIdOrDocId, newStatus);
-      if (selectedOrder) {
+      if (selectedOrder && (selectedOrder.id === orderIdOrDocId || selectedOrder.orderId === orderIdOrDocId)) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
     } catch (err) {
       console.error('Failed to update status:', err);
+      alert(err.message || 'Failed to update order status.');
     } finally {
       setUpdating(false);
     }
   };
 
   // --- DELETE ORDER WITH 10s UNDO ---
-  const handleDeleteOrderClick = (orderToDelete) => {
+  const handleDeleteOrderClick = async (orderToDelete) => {
     if (undoAction) {
-      finalizeUndoAction(undoAction);
+      setUndoAction(null);
     }
 
     const targetId = orderToDelete.id || orderToDelete.orderId;
+
+    // 1. Hide order locally in UI
     setOrders(prev => prev.filter(o => (o.id || o.orderId) !== targetId));
     if (selectedOrder && (selectedOrder.id === targetId || selectedOrder.orderId === targetId)) {
       setSelectedOrder(null);
     }
 
+    // 2. Immediately delete from Firestore & LocalStorage so page refresh never resurrects it!
+    try {
+      await deleteOrder(targetId);
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    }
+
+    // 3. Setup 10-second countdown for UNDO
     let seconds = 10;
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
 
@@ -94,7 +113,6 @@ export default function AdminOrdersPage() {
       seconds -= 1;
       if (seconds <= 0) {
         clearInterval(timer);
-        finalizeOrderDelete(orderToDelete);
         setUndoAction(null);
       } else {
         setUndoAction(prev => prev ? { ...prev, countdown: seconds } : null);
@@ -110,11 +128,11 @@ export default function AdminOrdersPage() {
   };
 
   // --- DELETE INDIVIDUAL ITEM WITH 10s UNDO ---
-  const handleDeleteItemClick = (itemIndexToDelete) => {
+  const handleDeleteItemClick = async (itemIndexToDelete) => {
     if (!selectedOrder) return;
 
     if (undoAction) {
-      finalizeUndoAction(undoAction);
+      setUndoAction(null);
     }
 
     const originalOrder = { ...selectedOrder };
@@ -135,10 +153,24 @@ export default function AdminOrdersPage() {
       grandTotal: newGrandTotal
     };
 
-    // Update local UI state
+    // 1. Update local UI state
     setSelectedOrder(newOrderState);
     setOrders(prev => prev.map(o => (o.id === selectedOrder.id || o.orderId === selectedOrder.orderId) ? newOrderState : o));
 
+    // 2. Immediately update Firestore & LocalStorage
+    try {
+      await updateOrderDetails(selectedOrder.id || selectedOrder.orderId, {
+        items: updatedItems,
+        productTotal: newProdTotal,
+        totalWeight: newWeight,
+        deliveryCharge: newDelivery,
+        grandTotal: newGrandTotal
+      });
+    } catch (e) {
+      console.error('Error updating order items in database:', e);
+    }
+
+    // 3. Setup 10-second countdown for UNDO
     let seconds = 10;
     if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
 
@@ -146,7 +178,6 @@ export default function AdminOrdersPage() {
       seconds -= 1;
       if (seconds <= 0) {
         clearInterval(timer);
-        finalizeItemDelete(newOrderState);
         setUndoAction(null);
       } else {
         setUndoAction(prev => prev ? { ...prev, countdown: seconds } : null);
@@ -165,7 +196,7 @@ export default function AdminOrdersPage() {
   };
 
   // --- UNDO ACTION ---
-  const handleUndo = () => {
+  const handleUndo = async () => {
     if (!undoAction) return;
 
     if (countdownTimerRef.current) {
@@ -173,49 +204,34 @@ export default function AdminOrdersPage() {
     }
 
     if (undoAction.type === 'DELETE_ORDER') {
-      setOrders(prev => [undoAction.order, ...prev].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      const restoredOrder = undoAction.order;
+      setOrders(prev => [restoredOrder, ...prev].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      setUndoAction(null);
+
+      try {
+        await restoreOrder(restoredOrder);
+      } catch (e) {
+        console.error('Error restoring deleted order:', e);
+      }
     } else if (undoAction.type === 'DELETE_ITEM') {
-      setSelectedOrder(undoAction.originalOrder);
+      const origOrder = undoAction.originalOrder;
+      setSelectedOrder(origOrder);
       setOrders(prev => prev.map(o =>
-        (o.id === undoAction.originalOrder.id || o.orderId === undoAction.originalOrder.orderId)
-          ? undoAction.originalOrder
-          : o
+        (o.id === origOrder.id || o.orderId === origOrder.orderId) ? origOrder : o
       ));
-    }
+      setUndoAction(null);
 
-    setUndoAction(null);
-  };
-
-  const finalizeUndoAction = (action) => {
-    if (action.type === 'DELETE_ORDER') {
-      finalizeOrderDelete(action.order);
-    } else if (action.type === 'DELETE_ITEM') {
-      finalizeItemDelete(action.newOrder);
-    }
-  };
-
-  const finalizeOrderDelete = async (orderDoc) => {
-    try {
-      await deleteOrder(orderDoc.id || orderDoc.orderId);
-    } catch (e) {
-      console.error('Finalizing order deletion failed:', e);
-    }
-  };
-
-  const finalizeItemDelete = async (updatedOrderDoc) => {
-    try {
-      const targetId = updatedOrderDoc.id || updatedOrderDoc.orderId;
-      const orderRef = doc(db, 'orders', targetId);
-      await updateDoc(orderRef, {
-        items: updatedOrderDoc.items,
-        productTotal: updatedOrderDoc.productTotal,
-        totalWeight: updatedOrderDoc.totalWeight,
-        deliveryCharge: updatedOrderDoc.deliveryCharge,
-        grandTotal: updatedOrderDoc.grandTotal,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (e) {
-      console.error('Finalizing item deletion failed:', e);
+      try {
+        await updateOrderDetails(origOrder.id || origOrder.orderId, {
+          items: origOrder.items,
+          productTotal: origOrder.productTotal,
+          totalWeight: origOrder.totalWeight,
+          deliveryCharge: origOrder.deliveryCharge,
+          grandTotal: origOrder.grandTotal
+        });
+      } catch (e) {
+        console.error('Error restoring order items:', e);
+      }
     }
   };
 
@@ -350,19 +366,27 @@ export default function AdminOrdersPage() {
                       {new Date(order.createdAt).toLocaleDateString('en-IN')}
                     </td>
                     <td className="py-3.5 px-4">
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id || order.orderId, e.target.value)}
-                        className={`text-[11px] font-bold rounded-lg border px-2 py-1 focus:outline-none ${order.status === 'Pending' ? 'bg-amber-50 text-amber-800 border-amber-200' :
-                            order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-                              order.status === 'Cancelled' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                      {order.status === 'Cancelled' ? (
+                        <div className="inline-flex items-center gap-1.5 bg-rose-50 text-[#C94A4A] border border-rose-200 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-not-allowed shadow-2xs" title="This order has been cancelled and cannot be changed.">
+                          <XCircle className="w-3.5 h-3.5 text-[#C94A4A]" />
+                          <span>Cancelled 🔒</span>
+                        </div>
+                      ) : (
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id || order.orderId, e.target.value)}
+                          disabled={updating}
+                          className={`text-[11px] font-bold rounded-lg border px-2 py-1 focus:outline-none transition-all ${
+                            order.status === 'Pending' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                              order.status === 'Delivered' ? 'bg-[#DDEFE6] text-[#0D4A35] border-[#DCE6E0]' :
                                 'bg-blue-50 text-blue-800 border-blue-200'
-                          }`}
-                      >
-                        {statusOptions.map(st => (
-                          <option key={st} value={st}>{st}</option>
-                        ))}
-                      </select>
+                            }`}
+                        >
+                          {statusOptions.map(st => (
+                            <option key={st} value={st}>{st}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 text-right space-x-1.5">
                       <button
@@ -409,6 +433,19 @@ export default function AdminOrdersPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Cancelled Locked Notice Banner */}
+            {selectedOrder.status === 'Cancelled' && (
+              <div className="bg-rose-50 border border-rose-200 text-[#C94A4A] text-xs p-3.5 rounded-2xl flex items-center justify-between font-bold animate-fade-in">
+                <div className="flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-[#C94A4A] shrink-0" />
+                  <span>This order has been cancelled and cannot be changed.</span>
+                </div>
+                <span className="bg-rose-100 text-[#C94A4A] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-rose-200">
+                  Locked 🔒
+                </span>
+              </div>
+            )}
 
             {/* Customer Details */}
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2 text-xs">
@@ -483,16 +520,23 @@ export default function AdminOrdersPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-100">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <label className="text-xs font-bold text-slate-700 whitespace-nowrap">Status:</label>
-                <select
-                  value={selectedOrder.status}
-                  onChange={(e) => handleStatusChange(selectedOrder.id || selectedOrder.orderId, e.target.value)}
-                  disabled={updating}
-                  className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 w-full sm:w-auto"
-                >
-                  {statusOptions.map(st => (
-                    <option key={st} value={st}>{st}</option>
-                  ))}
-                </select>
+                {selectedOrder.status === 'Cancelled' ? (
+                  <div className="bg-rose-50 text-[#C94A4A] border border-rose-200 rounded-xl px-3 py-2 text-xs font-extrabold flex items-center gap-1.5 cursor-not-allowed">
+                    <XCircle className="w-4 h-4 text-[#C94A4A]" />
+                    <span>Cancelled (Permanently Locked 🔒)</span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedOrder.status}
+                    onChange={(e) => handleStatusChange(selectedOrder.id || selectedOrder.orderId, e.target.value)}
+                    disabled={updating}
+                    className="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500 w-full sm:w-auto"
+                  >
+                    {statusOptions.map(st => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <button

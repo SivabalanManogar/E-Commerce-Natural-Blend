@@ -46,11 +46,10 @@ export default function MobileBottomNav() {
             <Link
               key={item.label}
               to={item.path}
-              className={`flex-1 flex flex-col items-center justify-center py-1 transition-all ${
-                active 
-                  ? 'text-[#246B45]' 
+              className={`flex-1 flex flex-col items-center justify-center py-1 transition-all ${active
+                  ? 'text-[#246B45]'
                   : 'text-[#65736A] hover:text-[#173D2B]'
-              }`}
+                }`}
             >
               <div className="relative flex items-center justify-center">
                 <Icon className={`w-5 h-5 transition-transform ${active ? 'stroke-[2.5] scale-110' : 'stroke-2'}`} />
@@ -61,9 +60,8 @@ export default function MobileBottomNav() {
                 )}
               </div>
 
-              <span className={`text-[11px] mt-1 tracking-tight leading-normal block text-center ${
-                active ? 'font-black text-[#246B45]' : 'font-extrabold text-[#65736A]'
-              }`}>
+              <span className={`text-[11px] mt-1 tracking-tight leading-normal block text-center ${active ? 'font-black text-[#246B45]' : 'font-extrabold text-[#65736A]'
+                }`}>
                 {item.label}
               </span>
             </Link>

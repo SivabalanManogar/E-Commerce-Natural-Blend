@@ -133,37 +133,116 @@ function saveOrderToLocalStorage(customerUid, order) {
 }
 
 /**
+ * Helper to resolve document reference by Firestore doc ID or readable orderId (e.g. NB-1042)
+ */
+async function resolveOrderDocRef(orderIdOrDocId) {
+  const directRef = doc(db, ORDERS_COLLECTION, orderIdOrDocId);
+  const directSnap = await getDoc(directRef);
+  if (directSnap.exists()) {
+    return { ref: directRef, snap: directSnap };
+  }
+
+  const ordersRef = collection(db, ORDERS_COLLECTION);
+  const q = query(ordersRef, where('orderId', '==', orderIdOrDocId));
+  const querySnap = await getDocs(q);
+  if (!querySnap.empty) {
+    const foundDoc = querySnap.docs[0];
+    return { ref: foundDoc.ref, snap: foundDoc };
+  }
+
+  throw new Error(`Order ${orderIdOrDocId} not found.`);
+}
+
+/**
  * Get customer orders strictly for the given customerUid
  */
 export async function getCustomerOrders(customerUid) {
   if (!customerUid) return [];
-
-  let localOrders = [];
-  try {
-    const key = `natural_blend_orders_${customerUid}`;
-    localOrders = JSON.parse(localStorage.getItem(key) || '[]');
-  } catch (e) { }
 
   try {
     const ordersRef = collection(db, ORDERS_COLLECTION);
     const q = query(ordersRef, where('customerUid', '==', customerUid));
     const snapshot = await getDocs(q);
     const remoteOrders = [];
+
     snapshot.forEach(docSnap => {
-      remoteOrders.push({ id: docSnap.id, ...docSnap.data() });
+      const data = docSnap.data();
+      if (!data.deleted && data.isDeleted !== true) {
+        remoteOrders.push({ id: docSnap.id, ...data });
+      }
     });
 
-    // Combine local & remote uniquely
-    const map = new Map();
-    [...remoteOrders, ...localOrders].forEach(o => {
-      const key = o.orderId || o.id;
-      if (!map.has(key)) map.set(key, o);
-    });
+    const list = remoteOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    return Array.from(map.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    try {
+      localStorage.setItem(`natural_blend_orders_${customerUid}`, JSON.stringify(list));
+    } catch (e) { }
+
+    return list;
   } catch (error) {
     console.warn('Error querying orders by customerUid from Firestore:', error);
-    return localOrders;
+    try {
+      const key = `natural_blend_orders_${customerUid}`;
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      return local.filter(o => !o.deleted && o.isDeleted !== true);
+    } catch (e) {
+      return [];
+    }
+  }
+}
+
+/**
+ * Realtime listener for customer's orders matching customerUid.
+ * Any admin status change or order deletion instantly reflects on the user's side without page refresh!
+ */
+export function subscribeToCustomerOrders(customerUid, callback) {
+  if (!customerUid) {
+    callback([]);
+    return () => { };
+  }
+
+  try {
+    const ordersRef = collection(db, ORDERS_COLLECTION);
+    const q = query(ordersRef, where('customerUid', '==', customerUid));
+
+    return onSnapshot(q, (snapshot) => {
+      const remoteOrders = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (!data.deleted && data.isDeleted !== true) {
+          remoteOrders.push({ id: docSnap.id, ...data });
+        }
+      });
+
+      const list = remoteOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Update localStorage cache with fresh Firestore status list
+      try {
+        const storageKey = `natural_blend_orders_${customerUid}`;
+        localStorage.setItem(storageKey, JSON.stringify(list));
+      } catch (e) { }
+
+      callback(list);
+    }, (error) => {
+      console.warn('Realtime customer orders snapshot error:', error);
+      try {
+        const storageKey = `natural_blend_orders_${customerUid}`;
+        const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        callback(local.filter(o => !o.deleted && o.isDeleted !== true));
+      } catch (e) {
+        callback([]);
+      }
+    });
+  } catch (error) {
+    console.warn('Error subscribing to customer orders:', error);
+    try {
+      const storageKey = `natural_blend_orders_${customerUid}`;
+      const local = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      callback(local.filter(o => !o.deleted && o.isDeleted !== true));
+    } catch (e) {
+      callback([]);
+    }
+    return () => { };
   }
 }
 
@@ -172,11 +251,9 @@ export async function getCustomerOrders(customerUid) {
  */
 export async function getOrderById(orderIdOrDocId, currentCustomerUid) {
   try {
-    const docRef = doc(db, ORDERS_COLLECTION, orderIdOrDocId);
-    const docSnap = await getDoc(docRef);
+    const { snap: docSnap } = await resolveOrderDocRef(orderIdOrDocId);
     if (docSnap.exists()) {
       const orderData = { id: docSnap.id, ...docSnap.data() };
-      // Verify ownership
       if (orderData.customerUid !== currentCustomerUid) {
         throw new Error('You do not have permission to view this order.');
       }
@@ -198,7 +275,10 @@ export async function getAllOrders() {
     const snapshot = await getDocs(ordersRef);
     const list = [];
     snapshot.forEach(docSnap => {
-      list.push({ id: docSnap.id, ...docSnap.data() });
+      const data = docSnap.data();
+      if (!data.deleted && data.isDeleted !== true) {
+        list.push({ id: docSnap.id, ...data });
+      }
     });
     return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   } catch (error) {
@@ -216,7 +296,10 @@ export function subscribeToOrders(callback) {
     return onSnapshot(ordersRef, (snapshot) => {
       const list = [];
       snapshot.forEach(docSnap => {
-        list.push({ id: docSnap.id, ...docSnap.data() });
+        const data = docSnap.data();
+        if (!data.deleted && data.isDeleted !== true) {
+          list.push({ id: docSnap.id, ...data });
+        }
       });
       list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       callback(list);
@@ -231,12 +314,35 @@ export function subscribeToOrders(callback) {
 
 /**
  * Update Order status (Admin).
+ * BACKEND VALIDATION: If an existing order is 'Cancelled', reject any status changes permanently.
  */
 export async function updateOrderStatus(orderIdOrDocId, newStatus) {
   try {
+    const { ref: docRef, snap: docSnap } = await resolveOrderDocRef(orderIdOrDocId);
+    const existingData = docSnap.data();
+
+    if (existingData.status === 'Cancelled') {
+      throw new Error('This order has been cancelled and cannot be changed.');
+    }
+
     const now = new Date().toISOString();
-    const docRef = doc(db, ORDERS_COLLECTION, orderIdOrDocId);
     await updateDoc(docRef, { status: newStatus, updatedAt: now });
+
+    // Instantly sync localStorage if present for this customer
+    if (existingData.customerUid) {
+      try {
+        const key = `natural_blend_orders_${existingData.customerUid}`;
+        const localList = JSON.parse(localStorage.getItem(key) || '[]');
+        const updatedList = localList.map(o => {
+          if (o.id === docSnap.id || o.orderId === existingData.orderId) {
+            return { ...o, status: newStatus, updatedAt: now };
+          }
+          return o;
+        });
+        localStorage.setItem(key, JSON.stringify(updatedList));
+      } catch (e) { }
+    }
+
     return true;
   } catch (error) {
     console.error('Error updating order status in Firestore:', error);
@@ -259,15 +365,102 @@ export async function markOrderSeen(orderIdOrDocId) {
 }
 
 /**
- * Delete an order permanently from Firestore (Admin).
+ * Delete an order permanently from Firestore & LocalStorage (Admin or Customer).
  */
 export async function deleteOrder(orderIdOrDocId) {
   try {
-    const docRef = doc(db, ORDERS_COLLECTION, orderIdOrDocId);
+    let docRef;
+    let orderData = null;
+    let targetDocId = orderIdOrDocId;
+
+    try {
+      const resolved = await resolveOrderDocRef(orderIdOrDocId);
+      docRef = resolved.ref;
+      orderData = resolved.snap.data();
+      targetDocId = resolved.snap.id;
+    } catch (resolveErr) {
+      docRef = doc(db, ORDERS_COLLECTION, orderIdOrDocId);
+    }
+
+    // 1. Mark as deleted and delete document permanently from Firestore
+    try {
+      await updateDoc(docRef, { deleted: true, isDeleted: true });
+    } catch (markErr) { }
     await deleteDoc(docRef);
+
+    // 2. Remove order from LocalStorage customer keys
+    const customerUid = orderData?.customerUid;
+    const targetOrderId = orderData?.orderId || orderIdOrDocId;
+
+    if (customerUid) {
+      try {
+        const key = `natural_blend_orders_${customerUid}`;
+        const localList = JSON.parse(localStorage.getItem(key) || '[]');
+        const filteredList = localList.filter(o => o.id !== targetDocId && o.orderId !== targetOrderId);
+        localStorage.setItem(key, JSON.stringify(filteredList));
+      } catch (e) { }
+    }
+
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('natural_blend_orders_')) {
+          const list = JSON.parse(localStorage.getItem(k) || '[]');
+          const clean = list.filter(o => o.id !== targetDocId && o.orderId !== targetOrderId);
+          localStorage.setItem(k, JSON.stringify(clean));
+        }
+      }
+    } catch (e) { }
+
     return true;
   } catch (error) {
-    console.error('Error deleting order from Firestore:', error);
+    console.error('Error deleting order permanently:', error);
+    throw error;
+  }
+}
+
+/**
+ * Restore an order to Firestore & LocalStorage if UNDO is clicked.
+ */
+export async function restoreOrder(orderDoc) {
+  try {
+    const targetDocId = orderDoc.id || orderDoc.orderId;
+    const docRef = doc(db, ORDERS_COLLECTION, targetDocId);
+
+    const cleanDoc = { ...orderDoc };
+    delete cleanDoc.id;
+
+    await setDoc(docRef, cleanDoc);
+
+    if (orderDoc.customerUid) {
+      try {
+        const key = `natural_blend_orders_${orderDoc.customerUid}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const exists = existing.some(o => (o.id === targetDocId || o.orderId === orderDoc.orderId));
+        if (!exists) {
+          existing.unshift(orderDoc);
+          localStorage.setItem(key, JSON.stringify(existing));
+        }
+      } catch (e) { }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error restoring order via UNDO:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update order items/details in Firestore safely by document resolver.
+ */
+export async function updateOrderDetails(orderIdOrDocId, updatePayload) {
+  try {
+    const { ref: docRef } = await resolveOrderDocRef(orderIdOrDocId);
+    await updateDoc(docRef, { ...updatePayload, updatedAt: new Date().toISOString() });
+    return true;
+  } catch (error) {
+    console.error('Error updating order details in Firestore:', error);
     throw error;
   }
 }

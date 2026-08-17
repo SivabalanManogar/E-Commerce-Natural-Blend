@@ -50,7 +50,7 @@ export default function CategoriesPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-40 bg-slate-100 rounded-3xl" />
+            <div key={i} className="h-44 bg-slate-100 rounded-3xl" />
           ))}
         </div>
       ) : (
@@ -61,27 +61,30 @@ export default function CategoriesPage() {
               <Link
                 key={cat.id || cat.name}
                 to={`/products?category=${encodeURIComponent(cat.name)}`}
-                className="group bg-white p-6 rounded-3xl border border-slate-100 shadow-xs hover:shadow-lg hover:border-emerald-200 transition-all flex items-center gap-5 justify-between"
+                className="group bg-white p-5 sm:p-6 rounded-3xl border border-[#DCE6E0] shadow-xs hover:shadow-xl hover:border-[#176B4D]/30 transition-all flex items-center gap-4 justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 overflow-hidden flex items-center justify-center p-3 shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-24 sm:w-28 h-24 sm:h-28 rounded-2xl bg-[#F8FAF6] overflow-hidden flex items-center justify-center p-1.5 shrink-0 border border-[#DCE6E0] group-hover:scale-105 transition-transform shadow-xs">
                     {cat.imageUrl ? (
                       <img src={cat.imageUrl} alt={cat.name} className="w-full h-full object-contain" />
                     ) : (
-                      <Leaf className="w-8 h-8 text-emerald-600" />
+                      <Leaf className="w-10 h-10 text-[#176B4D]" />
                     )}
                   </div>
                   <div>
-                    <h2 className="text-base font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                    <h2 className="text-base sm:text-lg font-extrabold text-[#0D4A35] group-hover:text-[#176B4D] transition-colors leading-snug">
                       {cat.name}
                     </h2>
-                    <span className="text-xs font-semibold text-slate-400 mt-0.5 block">
+                    <span className="text-xs font-semibold text-[#64756D] mt-1 block">
                       {count} {count === 1 ? 'Product' : 'Products'} Available
+                    </span>
+                    <span className="text-xs font-bold text-[#176B4D] mt-2 inline-flex items-center gap-1">
+                      Browse Category ➔
                     </span>
                   </div>
                 </div>
 
-                <div className="w-9 h-9 rounded-full bg-slate-50 group-hover:bg-emerald-600 group-hover:text-white text-slate-400 flex items-center justify-center transition-all shrink-0">
+                <div className="w-9 h-9 rounded-full bg-[#F8FAF6] group-hover:bg-[#176B4D] group-hover:text-white text-[#64756D] flex items-center justify-center transition-all shrink-0 border border-[#DCE6E0]">
                   <ArrowRight className="w-4 h-4" />
                 </div>
               </Link>

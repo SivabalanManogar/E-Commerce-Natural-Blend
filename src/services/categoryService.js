@@ -22,7 +22,15 @@ export async function getAllCategories() {
 
     const list = [];
     snapshot.forEach(docSnap => {
-      list.push({ id: docSnap.id, ...docSnap.data() });
+      const data = docSnap.data();
+      let imageUrl = data.imageUrl;
+      if (data.name === 'Home Care' && (!imageUrl || imageUrl.includes('mi_home_dishwash_bar.png'))) {
+        imageUrl = '/images/products/mi_home_floor_cleaner.png';
+        try {
+          updateDoc(doc(db, CATEGORIES_COLLECTION, docSnap.id), { imageUrl, updatedAt: new Date().toISOString() });
+        } catch (e) { }
+      }
+      list.push({ id: docSnap.id, ...data, imageUrl });
     });
     return list;
   } catch (error) {

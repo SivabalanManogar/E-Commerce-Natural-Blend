@@ -43,7 +43,7 @@ export default function CustomerLoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 animate-liquid-gradient overflow-hidden relative font-sans text-[#18231D]">
-      
+
       {/* Animated Floating Organic Blobs */}
       <div className="absolute -top-24 -right-24 w-[30rem] h-[30rem] bg-[#4F9D69]/20 rounded-full blur-[90px] pointer-events-none animate-blob-1" />
       <div className="absolute -bottom-24 -left-24 w-[30rem] h-[30rem] bg-[#246B45]/15 rounded-full blur-[90px] pointer-events-none animate-blob-2" />
@@ -51,7 +51,7 @@ export default function CustomerLoginPage() {
 
       {/* Main Full-Page Translucent Glass Login Card */}
       <div className="glass-panel rounded-[2.5rem] p-8 sm:p-12 border border-white/80 shadow-2xl w-full max-w-lg space-y-6 relative z-10 text-[#18231D] backdrop-blur-2xl">
-        
+
         {/* Top Header & Store Link */}
         <div className="flex items-center justify-between border-b border-[#173D2B]/10 pb-4">
           <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#65736A] hover:text-[#246B45] transition-colors">
@@ -66,9 +66,9 @@ export default function CustomerLoginPage() {
         <div className="text-center space-y-3 pt-2">
           <div className="relative w-20 h-20 mx-auto flex items-center justify-center shrink-0">
             <div className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl border-2 border-[#246B45]/30 flex items-center justify-center animate-float-soft">
-              <img 
-                src="/logo.png" 
-                alt="Natural Blend Logo" 
+              <img
+                src="/logo.png"
+                alt="Natural Blend Logo"
                 className="w-full h-full object-contain rounded-full"
               />
             </div>

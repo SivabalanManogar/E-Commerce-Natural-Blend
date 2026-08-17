@@ -305,29 +305,26 @@ export default function ProductDetailsPage() {
               </div>
             )}
 
-            {/* DUAL ACTION BUTTONS: Show both Add to Cart & Buy Product inside Product Details */}
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+            {/* DUAL BUTTONS: Add to Cart & Buy Product */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Button 1: Add to Cart */}
               <button
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
-                className={`py-3.5 px-2 sm:px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-1.5 border border-[#173D2B]/15 shadow-sm ${
-                  added
-                    ? 'bg-emerald-800 text-white'
-                    : isOutOfStock
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200'
-                      : 'bg-white hover:bg-[#EEF2EA] text-[#173D2B] active:scale-98'
-                }`}
+                className={`py-3.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 border border-[#173D2B]/15 shadow-sm ${added
+                  ? 'bg-emerald-800 text-white'
+                  : isOutOfStock
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200'
+                    : 'bg-white hover:bg-[#EEF2EA] text-[#173D2B] active:scale-98'
+                  }`}
               >
                 {added ? (
                   <>
-                    <Check className="w-4 h-4 shrink-0" />
-                    <span>Added!</span>
+                    <Check className="w-4 h-4" /> Added to Cart!
                   </>
                 ) : (
                   <>
-                    <ShoppingBag className="w-4 h-4 text-[#246B45] shrink-0" />
-                    <span>Add to Cart</span>
+                    <ShoppingBag className="w-4 h-4 text-[#246B45]" /> Add to Cart
                   </>
                 )}
               </button>
@@ -336,14 +333,13 @@ export default function ProductDetailsPage() {
               <button
                 onClick={handleBuyProduct}
                 disabled={isOutOfStock}
-                className={`py-3.5 px-2 sm:px-4 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 shadow-md ${
-                  isOutOfStock
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    : 'bg-[#246B45] hover:bg-[#173D2B] text-white active:scale-98'
-                }`}
+                className={`py-3.5 px-4 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 shadow-md ${isOutOfStock
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-[#246B45] hover:bg-[#173D2B] text-white active:scale-98'
+                  }`}
               >
-                <Zap className="w-4 h-4 fill-amber-300 text-amber-300 shrink-0" />
-                <span className="truncate">Buy Product — ₹{product.price * quantity}</span>
+                <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />
+                <span>Buy Product — ₹{product.price * quantity}</span>
               </button>
             </div>
           </div>

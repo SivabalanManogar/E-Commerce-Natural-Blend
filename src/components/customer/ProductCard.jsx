@@ -32,28 +32,15 @@ export default function ProductCard({ product }) {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    
-    // Direct buy without adding item to persistent cart
-    const buyNowItem = {
-      id: product.id,
-      name: product.name,
-      price: Number(product.price),
-      displayQuantity: product.displayQuantity,
-      displayUnit: product.displayUnit,
-      shippingWeightGrams: product.shippingWeightGrams !== null && product.shippingWeightGrams !== undefined ? Number(product.shippingWeightGrams) : null,
-      imageUrl: product.imageUrl,
-      stockQuantity: product.stockQuantity !== undefined ? Number(product.stockQuantity) : 999,
-      quantity: 1
-    };
-    
-    navigate('/checkout', { state: { buyNowItem } });
+    addToCart(product, 1);
+    navigate('/checkout');
   };
 
   return (
-    <div className="glass-panel rounded-2xl border border-white/80 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group text-[#18231D]">
+    <div className="bg-white rounded-2xl border border-[#DCE6E0] shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group text-[#17251F]">
 
       {/* Product Image & Badges */}
-      <Link to={`/product/${product.id}`} className="block relative aspect-square bg-white/70 overflow-hidden p-4">
+      <Link to={`/product/${product.id}`} className="block relative aspect-square bg-[#F8FAF6] overflow-hidden p-4">
         <img
           src={product.imageUrl || '/images/products/placeholder.png'}
           alt={product.name}
@@ -66,17 +53,17 @@ export default function ProductCard({ product }) {
         />
 
         {/* Category Badge */}
-        <span className="absolute top-2.5 left-2.5 bg-white/85 text-[#173D2B] text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-[#173D2B]/10 shadow-xs backdrop-blur-md">
+        <span className="absolute top-2.5 left-2.5 bg-white/90 text-[#0D4A35] text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-[#DCE6E0] shadow-xs backdrop-blur-md">
           {product.category || 'Natural'}
         </span>
 
         {/* Stock Badge */}
         {isOutOfStock ? (
-          <span className="absolute top-2.5 right-2.5 bg-rose-600 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
+          <span className="absolute top-2.5 right-2.5 bg-[#C94A4A] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
             Out of Stock
           </span>
         ) : (
-          <span className="absolute top-2.5 right-2.5 bg-[#246B45] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
+          <span className="absolute top-2.5 right-2.5 bg-[#176B4D] text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs">
             In Stock
           </span>
         )}
@@ -87,65 +74,48 @@ export default function ProductCard({ product }) {
         <div className="space-y-1.5">
           {/* Flipkart Style Rating Pill */}
           <div className="flex items-center gap-1.5">
-            <span className="bg-[#246B45] text-white text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-xs">
-              {rating} <Star className="w-2.5 h-2.5 fill-white" />
+            <span className="bg-[#176B4D] text-white text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-xs">
+              {rating} <Star className="w-2.5 h-2.5 fill-[#C89B3C] text-[#C89B3C]" />
             </span>
-            <span className="text-[10px] font-bold text-[#65736A]">
+            <span className="text-[10px] font-bold text-[#64756D]">
               ({reviewsCount} reviews)
             </span>
           </div>
 
           <Link to={`/product/${product.id}`} className="block">
-            <h3 className="text-xs sm:text-sm font-extrabold text-[#173D2B] line-clamp-2 hover:text-[#246B45] transition-colors leading-snug">
+            <h3 className="text-xs sm:text-sm font-extrabold text-[#0D4A35] line-clamp-2 hover:text-[#176B4D] transition-colors leading-snug">
               {product.name}
             </h3>
           </Link>
 
           {quantityLabel && (
-            <p className="text-[11px] font-medium text-[#65736A]">
-              Net Qty: <span className="text-[#173D2B] font-bold">{quantityLabel}</span>
+            <p className="text-[11px] font-medium text-[#64756D]">
+              Net Qty: <span className="text-[#0D4A35] font-bold">{quantityLabel}</span>
             </p>
           )}
         </div>
 
-        {/* Price & Action Buttons */}
-        <div className="pt-2 border-t border-[#173D2B]/10 space-y-2">
+        {/* Price & Single Buy Product Action Button */}
+        <div className="pt-2 border-t border-[#DCE6E0] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-[#65736A] font-bold">Price (Inclusive taxes)</span>
-            <span className="text-base font-black text-[#173D2B]">
+            <span className="text-[10px] text-[#64756D] font-bold">Price (Inclusive taxes)</span>
+            <span className="text-base font-black text-[#0D4A35]">
               ₹{product.price}
             </span>
           </div>
 
-          {/* Action Buttons: Hide Add to Cart on mobile devices (< sm), show only Buy Product */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
-            <button
-              onClick={handleAdd}
-              disabled={isOutOfStock}
-              className={`hidden sm:flex py-2 px-2 rounded-xl text-[11px] font-bold transition-all items-center justify-center gap-1 border border-[#173D2B]/15 shadow-xs ${
-                added
-                  ? 'bg-emerald-800 text-white'
-                  : isOutOfStock
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200'
-                    : 'bg-white hover:bg-[#EEF2EA] text-[#173D2B] active:scale-95'
-              }`}
-              title="Add to Cart"
-            >
-              {added ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5 text-[#246B45]" />}
-              <span>{added ? 'Added' : 'Add to Cart'}</span>
-            </button>
-
+          {/* Full-width Buy Product Action Button */}
+          <div className="pt-1">
             <button
               onClick={handleBuyProduct}
               disabled={isOutOfStock}
-              className={`w-full py-2.5 sm:py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex items-center justify-center gap-1 shadow-xs ${
-                isOutOfStock
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'bg-[#246B45] hover:bg-[#173D2B] text-white active:scale-95'
-              }`}
+              className={`w-full py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-98 ${isOutOfStock
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-[#176B4D] hover:bg-[#0D4A35] text-white'
+                }`}
               title="Buy Product"
             >
-              <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+              <Zap className="w-4 h-4 fill-[#C89B3C] text-[#C89B3C]" />
               <span>Buy Product</span>
             </button>
           </div>

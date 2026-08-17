@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 animate-liquid-gradient overflow-hidden relative font-sans text-[#18231D]">
-      
+
       {/* Animated Floating Organic Blobs */}
       <div className="absolute -top-24 -right-24 w-[30rem] h-[30rem] bg-[#246B45]/20 rounded-full blur-[90px] pointer-events-none animate-blob-1" />
       <div className="absolute -bottom-24 -left-24 w-[30rem] h-[30rem] bg-[#10291D]/15 rounded-full blur-[90px] pointer-events-none animate-blob-2" />
@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
 
       {/* Main Full-Page Translucent Glass Card */}
       <div className="glass-panel rounded-[2.5rem] p-8 sm:p-12 border border-white/80 shadow-2xl w-full max-w-lg space-y-6 relative z-10 text-[#18231D] backdrop-blur-2xl">
-        
+
         {/* Top Header & Store Link */}
         <div className="flex items-center justify-between border-b border-[#173D2B]/10 pb-4">
           <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#65736A] hover:text-[#246B45] transition-colors">

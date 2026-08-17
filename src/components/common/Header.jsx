@@ -137,8 +137,8 @@ export default function Header() {
                 key={link.path}
                 to={link.path}
                 className={`transition-colors py-1 ${isActive(link.path)
-                    ? 'text-emerald-700 border-b-2 border-emerald-600 font-bold'
-                    : 'hover:text-emerald-600'
+                  ? 'text-emerald-700 border-b-2 border-emerald-600 font-bold'
+                  : 'hover:text-emerald-600'
                   }`}
               >
                 {link.name}
@@ -261,8 +261,8 @@ export default function Header() {
               to={link.path}
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-3 py-2 rounded-lg font-bold transition-colors ${isActive(link.path)
-                  ? 'bg-emerald-50 text-emerald-800'
-                  : 'text-slate-700 hover:bg-slate-50'
+                ? 'bg-emerald-50 text-emerald-800'
+                : 'text-slate-700 hover:bg-slate-50'
                 }`}
             >
               {link.name}

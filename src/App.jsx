@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -7,7 +7,6 @@ import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import FloatingWhatsApp from './components/common/FloatingWhatsApp';
 import MobileBottomNav from './components/common/MobileBottomNav';
-import ScrollToTop from './components/common/ScrollToTop';
 
 import HomePage from './pages/customer/HomePage';
 import CategoriesPage from './pages/customer/CategoriesPage';
@@ -29,6 +28,34 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminMessagesPage from './pages/admin/AdminMessagesPage';
 
 /**
+ * ScrollToTop Component
+ * Automatically resets scroll position to top (0, 0) on every page route change.
+ */
+function ScrollToTop() {
+  const { pathname, search, hash } = useLocation();
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    if (hash) {
+      const element = document.getElementById(hash.replace('#', ''));
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [pathname, search, hash]);
+
+  return null;
+}
+
+/**
  * Protected Route Wrapper for Customers.
  * If customer is not authenticated, redirects to /login.
  */
@@ -39,7 +66,7 @@ function ProtectedCustomerRoute({ children }) {
   if (customerLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#176B4D] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -57,10 +84,10 @@ function AppLayout({ children }) {
   const isLoginRoute = location.pathname === '/login';
 
   return (
-    <div className="min-h-screen flex flex-col justify-between selection:bg-[#246B45] selection:text-white bg-[#F5F7F2]">
+    <div className="min-h-screen flex flex-col justify-between selection:bg-[#176B4D] selection:text-white bg-[#F8FAF6]">
       {!isAdminRoute && !isLoginRoute && <Header />}
 
-      <main className={!isAdminRoute && !isLoginRoute ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-6 pb-24 md:pb-8 flex-1 w-full" : "flex-1 w-full"}>
+      <main className={!isAdminRoute && !isLoginRoute ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-5 pb-24 md:pb-8 flex-1 w-full" : "flex-1 w-full"}>
         {children}
       </main>
 
