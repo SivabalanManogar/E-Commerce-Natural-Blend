@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Leaf, 
-  ArrowRight, 
-  ShieldCheck, 
-  MapPin, 
-  Phone, 
-  MessageCircle, 
-  Truck, 
-  Sparkles, 
+import {
+  Leaf,
+  ArrowRight,
+  ShieldCheck,
+  MapPin,
+  Phone,
+  MessageCircle,
+  Truck,
+  Sparkles,
   Award,
   CheckCircle2,
   Heart,
@@ -51,20 +51,39 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10 sm:space-y-16 pb-16 font-sans bg-[#F5F7F2] text-[#18231D]">
-      
+
       {/* Dynamic Moving Liquid Background Hero Section (Perfectly Fitted) */}
       <section className="relative overflow-hidden animate-liquid-gradient text-[#173D2B] py-8 sm:py-16 px-4 sm:px-12 rounded-3xl sm:rounded-[2.5rem] shadow-xl border border-white/60">
-        
+
         {/* Animated Smooth Moving Organic Blobs */}
         <div className="absolute -top-16 -right-16 w-80 sm:w-96 h-80 sm:h-96 bg-[#4F9D69]/20 rounded-full blur-[70px] pointer-events-none animate-blob-1" />
         <div className="absolute -bottom-16 -left-16 w-80 sm:w-96 h-80 sm:h-96 bg-[#246B45]/15 rounded-full blur-[70px] pointer-events-none animate-blob-2" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-[28rem] h-80 sm:h-[28rem] bg-white/40 rounded-full blur-[90px] pointer-events-none" />
 
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-10 relative z-10">
-          
-          {/* Left Hero Content */}
-          <div className="flex-1 text-center lg:text-left space-y-4 sm:space-y-6 w-full">
-            
+
+          {/* Logo Emblem (Rendered FIRST / TOP on Mobile) */}
+          <div className="relative shrink-0 flex items-center justify-center my-2 sm:my-0 order-1 lg:order-2">
+            <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-full bg-white p-2.5 shadow-2xl border-4 border-[#246B45]/40 flex items-center justify-center animate-float-soft">
+              <img
+                src="/logo.png"
+                alt="Natural Blend Emblem"
+                className="w-full h-full object-contain rounded-full"
+              />
+            </div>
+
+            <div className="absolute -top-1 right-0 bg-white/95 text-[#173D2B] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-full border border-[#173D2B]/10 shadow-md flex items-center gap-1">
+              <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> Karaikudi Store
+            </div>
+
+            <div className="absolute -bottom-1 left-0 bg-white/95 text-[#173D2B] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-full border border-[#173D2B]/10 shadow-md flex items-center gap-1">
+              <Leaf className="w-3 h-3 text-[#246B45]" /> Handcrafted Care
+            </div>
+          </div>
+
+          {/* Hero Content (Rendered SECOND / DOWN on Mobile) */}
+          <div className="flex-1 text-center lg:text-left space-y-4 sm:space-y-6 w-full order-2 lg:order-1">
+
             {/* Top Pill Badge */}
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-[#173D2B]/12 text-[#173D2B] text-[11px] sm:text-xs font-extrabold shadow-xs">
               <Leaf className="w-3.5 h-3.5 text-[#246B45] shrink-0" />
@@ -122,25 +141,6 @@ export default function HomePage() {
 
           </div>
 
-          {/* Right Floating Logo Emblem */}
-          <div className="relative shrink-0 flex items-center justify-center my-2 sm:my-0">
-            <div className="w-36 h-36 sm:w-56 sm:h-56 rounded-full bg-white p-2.5 shadow-2xl border-4 border-[#246B45]/40 flex items-center justify-center animate-float-soft">
-              <img 
-                src="/logo.png" 
-                alt="Natural Blend Emblem" 
-                className="w-full h-full object-contain rounded-full"
-              />
-            </div>
-
-            <div className="absolute -top-1 right-0 bg-white/95 text-[#173D2B] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-full border border-[#173D2B]/10 shadow-md flex items-center gap-1">
-              <Star className="w-3 h-3 text-amber-500 fill-amber-500" /> Karaikudi Store
-            </div>
-
-            <div className="absolute -bottom-1 left-0 bg-white/95 text-[#173D2B] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-full border border-[#173D2B]/10 shadow-md flex items-center gap-1">
-              <Leaf className="w-3 h-3 text-[#246B45]" /> Handcrafted Care
-            </div>
-          </div>
-
         </div>
       </section>
 
@@ -151,8 +151,8 @@ export default function HomePage() {
             <Truck className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-xs sm:text-sm font-extrabold text-[#173D2B]">Transparent Shipping</h4>
-            <p className="text-[11px] sm:text-xs text-[#65736A] mt-0.5 leading-relaxed">₹50 for first 1kg, then ₹20 per 500g across India.</p>
+            <h4 className="text-xs sm:text-sm font-extrabold text-[#173D2B]">Fast Shipping</h4>
+            <p className="text-[11px] sm:text-xs text-[#65736A] mt-0.5 leading-relaxed">Quick and reliable order delivery across India.</p>
           </div>
         </div>
 
@@ -255,7 +255,7 @@ export default function HomePage() {
 
       {/* Karaikudi Flagship Store Section (Light Liquid Glass Style) */}
       <section className="relative overflow-hidden animate-liquid-gradient text-[#173D2B] rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-12 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center border border-white/60">
-        
+
         {/* Moving Background Blobs */}
         <div className="absolute -top-12 -right-12 w-80 h-80 bg-[#4F9D69]/20 rounded-full blur-[60px] pointer-events-none animate-blob-2" />
         <div className="absolute -bottom-12 -left-12 w-80 h-80 bg-[#246B45]/15 rounded-full blur-[60px] pointer-events-none animate-blob-1" />
@@ -264,12 +264,12 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-[#173D2B]/12 text-[#173D2B] text-xs font-extrabold shadow-xs">
             <MapPin className="w-3.5 h-3.5 text-[#246B45]" /> Karaikudi Flagship Store
           </div>
-          
+
           <h2 className="text-2xl sm:text-3xl font-black text-[#173D2B] leading-tight">
             Natural Blend Store <br />
             <span className="text-[#246B45]">Amman Shannathi, Karaikudi</span>
           </h2>
-          
+
           <div className="space-y-1.5 text-xs text-[#65736A] leading-relaxed">
             <p className="font-extrabold text-[#173D2B] text-sm">Owner & Manager: M. Kavitha M.Sc</p>
             <p className="font-medium text-[#18231D]">83/1, Amman Shannathi, Karaikudi – 630001, Tamil Nadu, India</p>

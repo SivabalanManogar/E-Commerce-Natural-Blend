@@ -9,7 +9,8 @@ export default function FloatingWhatsApp() {
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 bg-[#246B45] hover:bg-[#173D2B] text-white p-3 sm:p-3.5 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 group border border-white/40 active:scale-95"
+      className="fixed bottom-24 md:bottom-6 right-4 sm:right-6 z-40 bg-[#246B45] hover:bg-[#173D2B] text-white p-3 sm:p-3.5 rounded-full shadow-2xl transition-all duration-300 flex items-center gap-2 group border border-white/40 active:scale-95"
+      style={{ bottom: 'calc(4rem + 16px)' }}
       title="Chat on WhatsApp with Natural Blend"
       aria-label="WhatsApp Chat"
     >

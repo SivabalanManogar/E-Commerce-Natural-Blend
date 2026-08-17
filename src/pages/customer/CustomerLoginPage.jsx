@@ -62,7 +62,7 @@ export default function CustomerLoginPage() {
           </span>
         </div>
 
-        {/* Logo (UNCHANGED) & Store Info */}
+        {/* Logo & Store Info */}
         <div className="text-center space-y-3 pt-2">
           <div className="relative w-20 h-20 mx-auto flex items-center justify-center shrink-0">
             <div className="w-20 h-20 bg-white rounded-full p-1.5 shadow-xl border-2 border-[#246B45]/30 flex items-center justify-center animate-float-soft">

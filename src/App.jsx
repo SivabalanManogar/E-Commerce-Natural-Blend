@@ -7,6 +7,7 @@ import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import FloatingWhatsApp from './components/common/FloatingWhatsApp';
 import MobileBottomNav from './components/common/MobileBottomNav';
+import ScrollToTop from './components/common/ScrollToTop';
 
 import HomePage from './pages/customer/HomePage';
 import CategoriesPage from './pages/customer/CategoriesPage';
@@ -58,8 +59,8 @@ function AppLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col justify-between selection:bg-[#246B45] selection:text-white bg-[#F5F7F2]">
       {!isAdminRoute && !isLoginRoute && <Header />}
-      
-      <main className={!isAdminRoute && !isLoginRoute ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-24 md:pt-6 pb-24 md:pb-0 flex-1 w-full" : "flex-1 w-full"}>
+
+      <main className={!isAdminRoute && !isLoginRoute ? "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-6 pb-24 md:pb-8 flex-1 w-full" : "flex-1 w-full"}>
         {children}
       </main>
 
@@ -75,6 +76,7 @@ export default function App() {
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AppLayout>
             <Routes>
               {/* Public Customer Login */}
