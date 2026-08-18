@@ -9,6 +9,7 @@ export default function CustomerProfilePage() {
   const [form, setForm] = useState({
     displayName: '',
     email: '',
+    photoURL: '',
     address: '',
     city: 'Karaikudi',
     state: 'Tamil Nadu',
@@ -18,22 +19,28 @@ export default function CustomerProfilePage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (customerProfile || customerUser) {
       setForm({
-        displayName: customerProfile?.displayName || customerUser?.displayName || '',
+        displayName: customerProfile?.displayName || customerUser?.displayName || customerProfile?.name || '',
         email: customerProfile?.email || customerUser?.email || '',
+        photoURL: customerProfile?.photoURL || customerUser?.photoURL || '',
         address: customerProfile?.address || '',
         city: customerProfile?.city || 'Karaikudi',
         state: customerProfile?.state || 'Tamil Nadu',
         pincode: customerProfile?.pincode || '630001'
       });
+      setImgError(false);
     }
   }, [customerProfile, customerUser]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === 'photoURL') {
+      setImgError(false);
+    }
     setSuccessMsg('');
     setErrorMsg('');
   };
@@ -60,26 +67,29 @@ export default function CustomerProfilePage() {
   };
 
   const displayEmail = customerUser?.email || customerProfile?.email || 'Authenticated User';
-  const photoURL = customerUser?.photoURL || customerProfile?.photoURL;
+  const photoURL = form.photoURL || customerUser?.photoURL || customerProfile?.photoURL;
+  const rawName = form.displayName || customerProfile?.name || customerUser?.displayName || 'User';
+  const userInitial = rawName.trim().charAt(0).toUpperCase() || 'U';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-12">
-      {/* Header */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-xs flex items-center gap-4">
-        {photoURL ? (
+    <div className="max-w-2xl mx-auto space-y-6 pb-12 font-sans">
+      {/* Header Card */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm flex items-center gap-5">
+        {photoURL && !imgError ? (
           <img
             src={photoURL}
             alt="Profile Avatar"
-            className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-xs shrink-0"
+            onError={() => setImgError(true)}
+            className="w-16 h-16 rounded-2xl object-cover border-2 border-[#176B4D]/30 shadow-md shrink-0"
           />
         ) : (
-          <div className="w-14 h-14 bg-emerald-100 text-emerald-800 rounded-2xl flex items-center justify-center font-black text-2xl shrink-0">
-            <User className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#176B4D] to-[#0D4A35] text-white flex items-center justify-center font-black text-2xl shadow-md border-2 border-emerald-400/30 shrink-0 select-none">
+            {userInitial}
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">My Profile</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Manage your personal information and default shipping address.</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">My Profile</h1>
+          <p className="text-xs text-slate-500 mt-0.5 font-medium">Manage your personal information and default shipping address.</p>
         </div>
       </div>
 

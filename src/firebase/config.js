@@ -20,7 +20,10 @@ import {
   getAuth, 
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
   signOut, 
   onAuthStateChanged
 } from "firebase/auth";
@@ -72,6 +75,9 @@ export {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
   signOut, 
   onAuthStateChanged,
   ref, 

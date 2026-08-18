@@ -7,6 +7,7 @@ import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import FloatingWhatsApp from './components/common/FloatingWhatsApp';
 import MobileBottomNav from './components/common/MobileBottomNav';
+import WelcomePopup from './components/common/WelcomePopup';
 
 import HomePage from './pages/customer/HomePage';
 import CategoriesPage from './pages/customer/CategoriesPage';
@@ -56,7 +57,7 @@ function ScrollToTop() {
 }
 
 /**
- * Protected Route Wrapper for Customers.
+ * Protected Customer Route Wrapper for Customers.
  * If customer is not authenticated, redirects to /login.
  */
 function ProtectedCustomerRoute({ children }) {
@@ -91,6 +92,7 @@ function AppLayout({ children }) {
         {children}
       </main>
 
+      {!isAdminRoute && !isLoginRoute && <WelcomePopup />}
       {!isAdminRoute && !isLoginRoute && <Footer />}
       {!isAdminRoute && !isLoginRoute && <FloatingWhatsApp />}
       {!isAdminRoute && !isLoginRoute && <MobileBottomNav />}

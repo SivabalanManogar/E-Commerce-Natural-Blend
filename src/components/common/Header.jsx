@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingBag,
@@ -21,11 +21,20 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [avatarErr, setAvatarErr] = useState(false);
 
   const { cartCount } = useCart();
   const { isCustomerLoggedIn, customerProfile, customerUser, logoutCustomer, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const customerName = customerProfile?.displayName || customerUser?.displayName || customerProfile?.name || customerUser?.email?.split('@')[0] || 'Customer';
+  const photoURL = customerProfile?.photoURL || customerUser?.photoURL;
+  const userInitial = (customerName || 'U').trim().charAt(0).toUpperCase();
+
+  useEffect(() => {
+    setAvatarErr(false);
+  }, [photoURL]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -52,29 +61,29 @@ export default function Header() {
   ];
 
   const isActive = (path) => location.pathname === path;
-  const customerName = customerProfile?.displayName || customerUser?.displayName || customerUser?.email?.split('@')[0] || 'Customer';
-  const photoURL = customerUser?.photoURL || customerProfile?.photoURL;
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#DCE6E0] shadow-xs">
 
       {/* Main Header Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 font-sans">
-        <div className="flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
 
-          {/* Brand Logo & Name */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <img
-              src="/logo.png"
-              alt="Natural Blend Logo"
-              className="w-11 h-11 object-contain rounded-full border border-emerald-100 shadow-xs group-hover:scale-105 transition-transform shrink-0"
-            />
-            <div>
-              <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 block leading-tight">
-                Natural <span className="text-emerald-700">Blend</span>
+          {/* Logo Branding */}
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white p-0.5 shadow-md border-2 border-[#176B4D]/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <img
+                src="/logo.png"
+                alt="Natural Blend Logo"
+                className="w-full h-full object-contain rounded-full"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base sm:text-xl font-black text-[#0D4A35] tracking-tight leading-none">
+                Natural <span className="text-[#176B4D]">Blend</span>
               </span>
-              <span className="text-[11px] text-slate-500 font-medium block">
-                Herbal & Wellness Store
+              <span className="text-[10px] font-extrabold text-[#64756D] tracking-wide mt-0.5">
+                Authentic Herbal Care
               </span>
             </div>
           </Link>
@@ -100,14 +109,14 @@ export default function Header() {
           </form>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-700">
+          <nav className="hidden lg:flex items-center gap-1 font-bold text-xs">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`transition-colors py-1 ${isActive(link.path)
-                  ? 'text-emerald-700 border-b-2 border-emerald-600 font-bold'
-                  : 'hover:text-emerald-600'
+                className={`px-3.5 py-2 rounded-xl transition-all ${isActive(link.path)
+                  ? 'bg-[#DDEFE6] text-[#0D4A35] shadow-xs'
+                  : 'text-[#64756D] hover:text-[#0D4A35] hover:bg-slate-50'
                   }`}
               >
                 {link.name}
@@ -123,12 +132,19 @@ export default function Header() {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border border-emerald-200"
+                  className="flex items-center gap-2 bg-[#DDEFE6]/70 hover:bg-[#DDEFE6] text-[#0D4A35] px-3 py-1.5 rounded-xl text-xs font-bold transition-all border border-[#DCE6E0]"
                 >
-                  {photoURL ? (
-                    <img src={photoURL} alt="Avatar" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                  {photoURL && !avatarErr ? (
+                    <img 
+                      src={photoURL} 
+                      alt="Avatar" 
+                      onError={() => setAvatarErr(true)}
+                      className="w-6 h-6 rounded-full object-cover shrink-0 border border-emerald-500/40 shadow-xs" 
+                    />
                   ) : (
-                    <UserCheck className="w-4 h-4 text-emerald-700" />
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#176B4D] to-[#0D4A35] text-white font-black text-[11px] flex items-center justify-center shrink-0 border border-emerald-400/40 shadow-xs select-none">
+                      {userInitial}
+                    </div>
                   )}
                   <span className="hidden sm:inline max-w-[120px] truncate">Hi, {customerName} 👋</span>
                 </button>

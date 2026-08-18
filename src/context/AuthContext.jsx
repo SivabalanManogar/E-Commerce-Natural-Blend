@@ -29,12 +29,20 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user && !sessionStorage.getItem('nb_admin_auth')) {
-        setCustomerUser(user);
-        try {
-          const profile = await syncCustomerProfile(user);
-          setCustomerProfile(profile);
-        } catch (err) {
-          console.warn('Error fetching profile on auth change:', err);
+        const isGoogleUser = user.providerData?.some(p => p.providerId === 'google.com');
+        const isVerified = user.emailVerified || isGoogleUser;
+
+        if (isVerified) {
+          setCustomerUser(user);
+          try {
+            const profile = await syncCustomerProfile(user);
+            setCustomerProfile(profile);
+          } catch (err) {
+            console.warn('Error fetching profile on auth change:', err);
+          }
+        } else {
+          setCustomerUser(null);
+          setCustomerProfile(null);
         }
       } else {
         setCustomerUser(null);
@@ -50,13 +58,33 @@ export function AuthProvider({ children }) {
   const refreshCustomerProfile = async () => {
     const currentUser = auth.currentUser || customerUser;
     if (currentUser && currentUser.uid) {
-      setCustomerUser(currentUser);
-      const prof = await getCustomerProfile(currentUser.uid);
-      if (prof) setCustomerProfile(prof);
+      const isGoogleUser = currentUser.providerData?.some(p => p.providerId === 'google.com');
+      if (currentUser.emailVerified || isGoogleUser) {
+        setCustomerUser(currentUser);
+        const prof = await getCustomerProfile(currentUser.uid);
+        if (prof) setCustomerProfile(prof);
+      }
     }
   };
 
+  // Welcome Popup Trigger State
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
+
+  const triggerWelcomePopup = () => {
+    setJustLoggedIn(true);
+    sessionStorage.setItem('nb_show_welcome_popup', 'true');
+  };
+
+  const consumeWelcomePopup = () => {
+    setJustLoggedIn(false);
+    sessionStorage.removeItem('nb_show_welcome_popup');
+  };
+
   const logoutCustomer = async () => {
+    setJustLoggedIn(false);
+    sessionStorage.removeItem('nb_show_welcome_popup');
+    sessionStorage.removeItem('nb_just_logged_in');
+    sessionStorage.removeItem('nb_welcome_shown');
     await apiLogoutCustomer();
     setCustomerUser(null);
     setCustomerProfile(null);
@@ -75,14 +103,20 @@ export function AuthProvider({ children }) {
     setIsAdmin(false);
   };
 
+  const isGoogleUser = customerUser?.providerData?.some(p => p.providerId === 'google.com');
+  const isCustomerLoggedIn = Boolean(customerUser && (customerUser.emailVerified || isGoogleUser));
+
   return (
     <AuthContext.Provider value={{
       customerUser,
       customerProfile,
-      isCustomerLoggedIn: !!customerUser,
+      isCustomerLoggedIn,
       customerLoading,
       refreshCustomerProfile,
       logoutCustomer,
+      justLoggedIn,
+      triggerWelcomePopup,
+      consumeWelcomePopup,
       isAdmin,
       adminLoading,
       loginAdmin,
