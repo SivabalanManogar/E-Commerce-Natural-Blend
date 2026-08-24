@@ -191,7 +191,7 @@ export default function HomePage() {
           {categories.map((cat) => (
             <Link
               key={cat.id || cat.name}
-              to={`/products?category=${encodeURIComponent(cat.name)}`}
+              to={`/categories?category=${encodeURIComponent(cat.name)}`}
               className="group bg-white p-3.5 sm:p-4 rounded-3xl border border-[#DCE6E0] shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center flex flex-col items-center justify-between"
             >
               <div className="w-full h-32 sm:h-36 rounded-2xl bg-[#F8FAF6] overflow-hidden mb-3 flex items-center justify-center p-1.5 border border-[#DCE6E0] group-hover:border-[#176B4D]/30 transition-all">

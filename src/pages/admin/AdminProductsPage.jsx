@@ -17,14 +17,18 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
-  uploadProductImage
+  uploadProductImage,
+  getProductImages,
+  deleteStorageImage
 } from '../../services/productService';
 import { getAllCategories } from '../../services/categoryService';
+import { getAllSubcategories } from '../../services/subcategoryService';
 import { compressImageFile, compressImageDataUrl } from '../../utils/imageCompressor';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -39,7 +43,10 @@ export default function AdminProductsPage() {
   // Form Fields
   const [form, setForm] = useState({
     name: '',
+    categoryId: '',
     category: 'Personal Care',
+    subCategoryId: '',
+    subCategory: '',
     price: '',
     displayQuantity: '100',
     displayUnit: 'g',
@@ -61,12 +68,14 @@ export default function AdminProductsPage() {
   const loadCatalog = async () => {
     setLoading(true);
     try {
-      const [prodList, catList] = await Promise.all([
+      const [prodList, catList, subList] = await Promise.all([
         getAllProducts(),
-        getAllCategories()
+        getAllCategories(),
+        getAllSubcategories()
       ]);
       setProducts(prodList);
       setCategories(catList);
+      setSubcategories(subList);
     } catch (err) {
       console.error('Error loading admin products:', err);
     } finally {
@@ -78,13 +87,36 @@ export default function AdminProductsPage() {
     loadCatalog();
   }, []);
 
+  const getMatchingSubcategories = (catId, catName) => {
+    if (!catId && !catName) return [];
+    return subcategories.filter(s => {
+      const matchId = catId && s.parentCategoryId === catId;
+      const matchCatIdLower = catId && s.parentCategoryId && s.parentCategoryId.toLowerCase() === catId.toLowerCase();
+      const matchCatName = catName && s.parentCategoryId && s.parentCategoryId.toLowerCase() === catName.toLowerCase();
+      const matchParentName = catName && s.parentCategoryName && s.parentCategoryName.toLowerCase() === catName.toLowerCase();
+      return matchId || matchCatIdLower || matchCatName || matchParentName;
+    });
+  };
+
+  const [imageItems, setImageItems] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
+  const [newUrlInput, setNewUrlInput] = useState('');
+
   const openAddModal = () => {
     setEditingProduct(null);
-    setImageFile(null);
-    setPreviewUrl('');
+    setImageItems([]);
+    setImagesToDelete([]);
+    setNewUrlInput('');
+    const firstCat = categories[0];
+    const catId = firstCat?.id || '';
+    const catName = firstCat?.name || 'Personal Care';
+
     setForm({
       name: '',
-      category: categories[0]?.name || 'Personal Care',
+      categoryId: catId,
+      category: catName,
+      subCategoryId: '',
+      subCategory: '',
       price: '',
       displayQuantity: '100',
       displayUnit: 'g',
@@ -107,11 +139,31 @@ export default function AdminProductsPage() {
 
   const openEditModal = (product) => {
     setEditingProduct(product);
-    setImageFile(null);
-    setPreviewUrl(product.imageUrl || '');
+    setImagesToDelete([]);
+    setNewUrlInput('');
+
+    const existingUrls = getProductImages(product);
+    setImageItems(existingUrls.map(url => ({
+      id: Math.random().toString(36).substring(2, 9),
+      url,
+      file: null,
+      isExisting: true
+    })));
+
+    const foundCat = categories.find(c => c.id === product.categoryId || (c.name && c.name.toLowerCase() === (product.category || '').toLowerCase())) || categories[0];
+    const catId = product.categoryId || foundCat?.id || '';
+    const catName = product.category || foundCat?.name || 'Personal Care';
+
+    const foundSub = subcategories.find(s => s.id === product.subCategoryId || (s.name && s.name.toLowerCase() === (product.subCategory || '').toLowerCase()));
+    const subId = product.subCategoryId || foundSub?.id || '';
+    const subName = product.subCategory || foundSub?.name || '';
+
     setForm({
       name: product.name || '',
-      category: product.category || 'Personal Care',
+      categoryId: catId,
+      category: catName,
+      subCategoryId: subId,
+      subCategory: subName,
       price: product.price !== undefined ? String(product.price) : '',
       displayQuantity: product.displayQuantity !== undefined ? String(product.displayQuantity) : '',
       displayUnit: product.displayUnit || 'g',
@@ -132,34 +184,96 @@ export default function AdminProductsPage() {
     setModalOpen(true);
   };
 
-  const handleFormChange = async (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => {
-      const updated = {
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      };
-      if (name === 'imageUrl' && !imageFile) {
-        setPreviewUrl(value);
-      }
-      return updated;
-    });
+  const handleMainCategoryChange = (e) => {
+    const selectedCatName = e.target.value;
+    const foundCat = categories.find(c => c.name === selectedCatName || c.id === selectedCatName);
+    const catId = foundCat?.id || '';
+    const catName = foundCat?.name || selectedCatName;
+
+    setForm(prev => ({
+      ...prev,
+      categoryId: catId,
+      category: catName,
+      subCategoryId: '',
+      subCategory: ''
+    }));
   };
 
-  const handleImageFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      try {
-        const compressedDataUrl = await compressImageFile(file);
-        setPreviewUrl(compressedDataUrl);
-      } catch (err) {
-        console.warn('Compression fallback:', err);
-        const reader = new FileReader();
-        reader.onloadend = () => setPreviewUrl(reader.result);
-        reader.readAsDataURL(file);
-      }
+  const handleSubCategoryChange = (e) => {
+    const selectedSubName = e.target.value;
+    if (!selectedSubName) {
+      setForm(prev => ({
+        ...prev,
+        subCategoryId: '',
+        subCategory: ''
+      }));
+      return;
     }
+
+    const foundSub = subcategories.find(s => s.name === selectedSubName || s.id === selectedSubName);
+    const subId = foundSub?.id || '';
+    const subName = foundSub?.name || selectedSubName;
+
+    setForm(prev => ({
+      ...prev,
+      subCategoryId: subId,
+      subCategory: subName
+    }));
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSelectMultipleFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const newItems = files.map(file => ({
+      id: Math.random().toString(36).substring(2, 9),
+      url: URL.createObjectURL(file),
+      file: file,
+      isExisting: false
+    }));
+
+    setImageItems(prev => [...prev, ...newItems]);
+    e.target.value = '';
+  };
+
+  const handleAddUrlInput = () => {
+    if (!newUrlInput.trim()) return;
+    setImageItems(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substring(2, 9),
+        url: newUrlInput.trim(),
+        file: null,
+        isExisting: false
+      }
+    ]);
+    setNewUrlInput('');
+  };
+
+  const handleRemoveImage = (index) => {
+    const item = imageItems[index];
+    if (item && item.isExisting && item.url) {
+      setImagesToDelete(prev => [...prev, item.url]);
+    }
+    setImageItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSetMainImage = (index) => {
+    if (index === 0) return;
+    setImageItems(prev => {
+      const updated = [...prev];
+      const [selected] = updated.splice(index, 1);
+      updated.unshift(selected);
+      return updated;
+    });
   };
 
   const handleSave = async (e) => {
@@ -175,29 +289,55 @@ export default function AdminProductsPage() {
 
     setSubmitting(true);
     try {
-      let finalImageUrl = form.imageUrl || previewUrl;
+      const finalImageUrls = [];
+      const productId = editingProduct ? editingProduct.id : `prod_${Date.now()}`;
 
-      if (imageFile) {
-        // Compress uploaded file to super lightweight Data URL (~30KB)
-        const compressed = await compressImageFile(imageFile);
-        if (compressed) {
-          finalImageUrl = compressed;
-        } else {
-          const uploadedUrl = await uploadProductImage(imageFile, editingProduct ? editingProduct.id : `prod_${Date.now()}`);
-          if (uploadedUrl) finalImageUrl = uploadedUrl;
+      for (const item of imageItems) {
+        if (item.file) {
+          let resolvedUrl = null;
+          // 1. Try uploading to Firebase Storage with a 4-second timeout
+          try {
+            const storageUploadPromise = uploadProductImage(item.file, productId);
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 4000));
+            resolvedUrl = await Promise.race([storageUploadPromise, timeoutPromise]);
+          } catch (storageErr) {
+            console.warn('Storage upload error:', storageErr);
+          }
+
+          // 2. If Storage upload didn't return a URL within 4s, compress client-side to Data URL
+          if (!resolvedUrl) {
+            try {
+              resolvedUrl = await compressImageFile(item.file);
+            } catch (compErr) {
+              console.warn('Compression error:', compErr);
+            }
+          }
+
+          if (resolvedUrl) {
+            finalImageUrls.push(resolvedUrl);
+          }
+        } else if (item.url) {
+          finalImageUrls.push(item.url);
         }
-      } else if (finalImageUrl && finalImageUrl.startsWith('data:image')) {
-        // Compress large pasted base64 data URLs
-        finalImageUrl = await compressImageDataUrl(finalImageUrl);
+      }
+
+      if (finalImageUrls.length === 0) {
+        finalImageUrls.push('/images/products/placeholder.png');
+      }
+
+      // 2. Delete removed Firebase Storage files safely (non-blocking)
+      for (const urlToDelete of imagesToDelete) {
+        deleteStorageImage(urlToDelete).catch(err => console.warn('Storage delete warning:', err));
       }
 
       const payload = {
         ...form,
         price: Number(form.price),
         displayQuantity: Number(form.displayQuantity) || 1,
-        shippingWeightGrams: form.shippingWeightGrams.trim() !== '' ? Number(form.shippingWeightGrams) : null,
+        shippingWeightGrams: form.shippingWeightGrams && String(form.shippingWeightGrams).trim() !== '' ? Number(form.shippingWeightGrams) : null,
         stockQuantity: Number(form.stockQuantity) || 0,
-        imageUrl: finalImageUrl || '/images/products/placeholder.png'
+        images: finalImageUrls,
+        imageUrl: finalImageUrls[0] || '/images/products/placeholder.png'
       };
 
       if (editingProduct) {
@@ -344,7 +484,12 @@ export default function AdminProductsPage() {
                         <span className="font-bold text-slate-900 max-w-xs line-clamp-1">{prod.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-slate-600">{prod.category}</td>
+                    <td className="py-3 px-4 text-slate-600 font-semibold">
+                      <span>{prod.category}</span>
+                      {prod.subCategory && (
+                        <span className="block text-[11px] text-emerald-700 font-bold">↳ {prod.subCategory}</span>
+                      )}
+                    </td>
                     <td className="py-3 px-4 font-black text-emerald-950">₹{prod.price}</td>
                     <td className="py-3 px-4 text-slate-700">
                       {prod.displayQuantity}{prod.displayUnit}
@@ -418,18 +563,35 @@ export default function AdminProductsPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Category *</label>
-                  <select
-                    name="category"
-                    value={form.category}
-                    onChange={handleFormChange}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
-                  >
-                    {categories.map(c => (
-                      <option key={c.id || c.name} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Main Category *</label>
+                    <select
+                      name="category"
+                      value={form.category}
+                      onChange={handleMainCategoryChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                    >
+                      {categories.map(c => (
+                        <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Sub-Category (Optional)</label>
+                    <select
+                      name="subCategory"
+                      value={form.subCategory || ''}
+                      onChange={handleSubCategoryChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 font-medium text-slate-800"
+                    >
+                      <option value="">None (Main Category Only)</option>
+                      {getMatchingSubcategories(form.categoryId, form.category).map(sub => (
+                        <option key={sub.id || sub.name} value={sub.name}>{sub.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -482,58 +644,122 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Product Image Section: File Upload + URL Input + Live Preview */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
-                <label className="block font-bold text-slate-800 text-xs">Product Image</label>
+              {/* Product Images Section: Multiple Upload + URL Input + Local Previews */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-800 text-xs">
+                    Product Images * <span className="text-slate-400 font-normal">(First image is Primary / Main Image)</span>
+                  </label>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    {imageItems.length} {imageItems.length === 1 ? 'Image' : 'Images'} Selected
+                  </span>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-
-                  {/* Image Live Preview Box */}
-                  <div className="w-full h-32 bg-white rounded-xl border border-slate-200 flex items-center justify-center p-2 relative overflow-hidden shrink-0">
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Product Preview"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://placehold.co/300x300/e2e8f0/1e293b?text=Invalid+Image+URL';
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center text-slate-400 space-y-1">
-                        <ImageIcon className="w-8 h-8 mx-auto" />
-                        <span className="text-[10px] block font-medium">No Image Selected</span>
-                      </div>
-                    )}
+                {/* Upload & Add Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <span className="block font-semibold text-slate-600 text-[11px] mb-1">+ Select Multiple Image Files</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleSelectMultipleFiles}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#176B4D] file:text-white hover:file:bg-[#0D4A35]"
+                    />
                   </div>
 
-                  {/* Upload File & Image URL Controls */}
-                  <div className="sm:col-span-2 space-y-3">
-                    <div>
-                      <span className="block font-semibold text-slate-600 text-[11px] mb-1">Option A: Upload Image File</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageFileChange}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="block font-semibold text-slate-600 text-[11px] mb-1">Option B: Or Enter Image URL / Path</span>
+                  <div>
+                    <span className="block font-semibold text-slate-600 text-[11px] mb-1">+ Add Image URL String</span>
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        name="imageUrl"
-                        placeholder="e.g. /images/products/neem_alovera_soap.jpg or https://..."
-                        value={form.imageUrl}
-                        onChange={handleFormChange}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                        placeholder="https://... or /images/..."
+                        value={newUrlInput}
+                        onChange={(e) => setNewUrlInput(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none"
                       />
+                      <button
+                        type="button"
+                        onClick={handleAddUrlInput}
+                        className="px-3 py-1.5 bg-[#176B4D] text-white font-bold text-xs rounded-xl hover:bg-[#0D4A35] shrink-0"
+                      >
+                        Add
+                      </button>
                     </div>
                   </div>
-
                 </div>
+
+                {/* Image Thumbnails Grid */}
+                {imageItems.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                    {imageItems.map((item, idx) => (
+                      <div
+                        key={item.id || idx}
+                        className={`relative bg-white rounded-xl border p-2 flex flex-col items-center justify-between gap-1 shadow-xs transition-all ${idx === 0 ? 'border-2 border-[#176B4D] ring-2 ring-emerald-100' : 'border-slate-200'}`}
+                      >
+                        {/* Primary Badge */}
+                        {idx === 0 && (
+                          <span className="absolute top-1 left-1 bg-[#176B4D] text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs z-10">
+                            MAIN
+                          </span>
+                        )}
+
+                        {/* Remove Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shadow-xs z-10 font-black"
+                          title="Remove Image"
+                        >
+                          ✕
+                        </button>
+
+                        <div className="w-full h-24 flex items-center justify-center overflow-hidden rounded-lg mt-3 bg-slate-50">
+                          <img
+                            src={item.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://placehold.co/200x200/e2e8f0/1e293b?text=Image+Error';
+                            }}
+                          />
+                        </div>
+
+                        <div className="w-full flex items-center justify-between text-[10px] font-bold text-slate-600 pt-1">
+                          <span>Image {idx + 1}</span>
+                          {idx !== 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetMainImage(idx)}
+                              className="text-[#176B4D] hover:underline font-black"
+                            >
+                              Set Main
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-slate-500 py-6 px-4 bg-white rounded-xl border border-dashed border-slate-300 text-xs flex flex-col items-center justify-center gap-2">
+                    <ImageIcon className="w-8 h-8 text-slate-300" />
+                    <div>
+                      <p className="font-semibold text-slate-700">No product images selected yet</p>
+                      <p className="text-[11px] text-slate-400">Choose image files from your computer or paste image URLs above</p>
+                    </div>
+                    <label className="inline-flex items-center gap-1.5 bg-[#176B4D] hover:bg-[#0D4A35] text-white font-extrabold px-4 py-2 rounded-xl text-xs cursor-pointer shadow-xs transition-all mt-1">
+                      <span>+ Choose Product Images</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleSelectMultipleFiles}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

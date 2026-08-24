@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Check, Star, Zap, Eye } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { getProductPrimaryImage } from '../../services/productService';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -42,7 +43,7 @@ export default function ProductCard({ product }) {
       {/* Product Image & Badges */}
       <Link to={`/product/${product.id}`} className="block relative aspect-square bg-[#F8FAF6] overflow-hidden p-4">
         <img
-          src={product.imageUrl || '/images/products/placeholder.png'}
+          src={getProductPrimaryImage(product)}
           alt={product.name}
           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           loading="lazy"

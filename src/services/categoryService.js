@@ -6,7 +6,8 @@ import {
   setDoc, 
   addDoc, 
   updateDoc, 
-  deleteDoc 
+  deleteDoc,
+  onSnapshot
 } from '../firebase/config';
 import initialCategoriesData from '../data/initialCategories.json';
 
@@ -39,6 +40,39 @@ export async function getAllCategories() {
   }
 }
 
+export function subscribeToCategories(callback) {
+  try {
+    const categoriesRef = collection(db, CATEGORIES_COLLECTION);
+    return onSnapshot(categoriesRef, (snapshot) => {
+      if (snapshot.empty) {
+        callback(initialCategoriesData);
+        return;
+      }
+      const list = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        list.push({ id: docSnap.id, ...data });
+      });
+      callback(list);
+    }, (err) => {
+      console.warn('Categories subscription error:', err);
+    });
+  } catch (err) {
+    console.error('Failed to subscribe to categories:', err);
+    return () => {};
+  }
+}
+
+export async function isDuplicateCategoryName(name, excludeId = null) {
+  if (!name) return false;
+  const norm = name.trim().toLowerCase();
+  const all = await getAllCategories();
+  return all.some(c => {
+    if (excludeId && c.id === excludeId) return false;
+    return c.name && c.name.trim().toLowerCase() === norm;
+  });
+}
+
 export async function seedInitialCategories() {
   try {
     const categoriesRef = collection(db, CATEGORIES_COLLECTION);
@@ -59,9 +93,14 @@ export async function seedInitialCategories() {
 
 export async function addCategory(categoryData) {
   try {
+    const isDup = await isDuplicateCategoryName(categoryData.name);
+    if (isDup) {
+      throw new Error(`A category named "${categoryData.name.trim()}" already exists.`);
+    }
+
     const categoriesRef = collection(db, CATEGORIES_COLLECTION);
     const payload = {
-      name: categoryData.name,
+      name: categoryData.name.trim(),
       imageUrl: categoryData.imageUrl || null,
       active: categoryData.active !== undefined ? categoryData.active : true,
       createdAt: new Date().toISOString(),
@@ -77,11 +116,20 @@ export async function addCategory(categoryData) {
 
 export async function updateCategory(id, categoryData) {
   try {
+    if (categoryData.name) {
+      const isDup = await isDuplicateCategoryName(categoryData.name, id);
+      if (isDup) {
+        throw new Error(`A category named "${categoryData.name.trim()}" already exists.`);
+      }
+    }
+
     const docRef = doc(db, CATEGORIES_COLLECTION, id);
     const payload = {
       ...categoryData,
       updatedAt: new Date().toISOString()
     };
+    if (payload.name) payload.name = payload.name.trim();
+
     await setDoc(docRef, payload, { merge: true });
     return { id, ...payload };
   } catch (error) {
@@ -100,3 +148,4 @@ export async function deleteCategory(id) {
     throw error;
   }
 }
+

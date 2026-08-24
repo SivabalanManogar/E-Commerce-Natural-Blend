@@ -20,9 +20,11 @@ import {
   ThumbsUp,
   User,
   CheckCircle2,
-  Send
+  Send,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { getProductById } from '../../services/productService';
+import { getProductById, getProductImages } from '../../services/productService';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -30,6 +32,7 @@ export default function ProductDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [added, setAdded] = useState(false);
@@ -53,6 +56,9 @@ export default function ProductDetailsPage() {
       try {
         const prod = await getProductById(id);
         setProduct(prod);
+        setSelectedIdx(0);
+
+        // Generate realistic Flipkart-style initial reviews for this product
 
         // Generate realistic Flipkart-style initial reviews for this product
         const initialReviews = [
@@ -194,6 +200,21 @@ export default function ProductDetailsPage() {
     1: reviews.filter(r => r.rating === 1).length,
   };
 
+  const imageList = getProductImages(product);
+  const selectedImage = imageList[selectedIdx] || imageList[0] || '/images/products/placeholder.png';
+
+  const handlePrevImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedIdx(prev => (prev - 1 + imageList.length) % imageList.length);
+  };
+
+  const handleNextImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedIdx(prev => (prev + 1) % imageList.length);
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-16 font-sans text-[#18231D]">
 
@@ -208,20 +229,83 @@ export default function ProductDetailsPage() {
       {/* Main Details Card (Glassmorphism Style) */}
       <div className="glass-panel rounded-[2.5rem] p-6 sm:p-10 border border-white/80 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
 
-        {/* Left Column: Image */}
-        <div className="bg-white/80 rounded-3xl p-6 flex items-center justify-center border border-[#173D2B]/10 relative min-h-[320px] shadow-xs">
-          <img
-            src={product.imageUrl || '/images/products/placeholder.png'}
-            alt={product.name}
-            className="w-full max-h-96 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'https://placehold.co/500x500/e2e8f0/1e293b?text=Natural+Blend';
-            }}
-          />
-          <span className="absolute top-4 left-4 bg-white/90 text-[#173D2B] text-xs font-extrabold px-3.5 py-1 rounded-full border border-[#173D2B]/10 shadow-xs">
-            {product.category || 'Natural Care'}
-          </span>
+        {/* Left Column: Flipkart-Style Multi-Image Gallery */}
+        <div className="flex flex-col-reverse md:flex-row gap-4 items-start w-full">
+
+          {/* Vertical/Horizontal Thumbnails List */}
+          {imageList.length > 1 && (
+            <div className="w-full md:w-20 shrink-0 flex flex-row md:flex-col gap-2.5 overflow-x-auto md:overflow-y-auto max-h-none md:max-h-[420px] pb-1 md:pb-0 scrollbar-none pr-0 md:pr-1">
+              {imageList.map((imgUrl, idx) => {
+                const isActive = selectedIdx === idx;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedIdx(idx)}
+                    onMouseEnter={() => setSelectedIdx(idx)}
+                    className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-white p-1.5 border-2 transition-all shrink-0 relative ${
+                      isActive
+                        ? 'border-[#176B4D] shadow-md scale-105 ring-2 ring-emerald-100'
+                        : 'border-[#DCE6E0] opacity-75 hover:opacity-100 hover:border-slate-300'
+                    }`}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://placehold.co/150x150/e2e8f0/1e293b?text=Image';
+                      }}
+                    />
+                    {isActive && (
+                      <div className="absolute inset-0 bg-[#176B4D]/5 pointer-events-none" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Large Main Preview Image Area */}
+          <div className="flex-1 w-full bg-white/90 rounded-3xl p-6 flex items-center justify-center border border-[#173D2B]/10 relative min-h-[340px] sm:min-h-[420px] shadow-xs group">
+            <img
+              src={selectedImage}
+              alt={product.name}
+              className="w-full max-h-96 sm:max-h-[420px] object-contain transition-all duration-300"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://placehold.co/500x500/e2e8f0/1e293b?text=Natural+Blend';
+              }}
+            />
+
+            {/* Category Badge */}
+            <span className="absolute top-4 left-4 bg-white/90 text-[#173D2B] text-xs font-extrabold px-3.5 py-1 rounded-full border border-[#173D2B]/10 shadow-xs backdrop-blur-md z-10">
+              {product.category || 'Natural Care'}
+            </span>
+
+            {/* Previous / Next Overlay Controls (Shown when multiple images exist) */}
+            {imageList.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-[#176B4D] text-[#0D4A35] hover:text-white p-2 rounded-full shadow-md border border-[#DCE6E0] transition-all opacity-80 hover:opacity-100 z-10"
+                  title="Previous Image"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-[#176B4D] text-[#0D4A35] hover:text-white p-2 rounded-full shadow-md border border-[#DCE6E0] transition-all opacity-80 hover:opacity-100 z-10"
+                  title="Next Image"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Key Details & Dual Action Buttons */}

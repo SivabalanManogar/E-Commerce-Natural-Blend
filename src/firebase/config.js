@@ -27,7 +27,7 @@ import {
   signOut, 
   onAuthStateChanged
 } from "firebase/auth";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 // Firebase configuration for Natural Blend
 const firebaseConfig = {
@@ -82,7 +82,8 @@ export {
   onAuthStateChanged,
   ref, 
   uploadBytes, 
-  getDownloadURL 
+  getDownloadURL,
+  deleteObject 
 };
 
 export default app;

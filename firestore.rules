@@ -28,6 +28,12 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
 
+    // Subcategories collection: Anyone can read, only admin can write
+    match /subcategories/{subCategoryId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
     // Orders collection:
     // - Authenticated customer can create an order where customerUid == request.auth.uid
     // - Authenticated customer can read ONLY their own orders (customerUid == request.auth.uid)

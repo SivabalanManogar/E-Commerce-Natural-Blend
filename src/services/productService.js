@@ -15,11 +15,48 @@ import {
   storage,
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
+  deleteObject
 } from '../firebase/config';
 import initialProductsData from '../data/initialProducts.json';
 
 const PRODUCTS_COLLECTION = 'products';
+
+/**
+ * Get clean array of image URLs for a product with backward compatibility.
+ */
+export function getProductImages(product) {
+  if (!product) return ['/images/products/placeholder.png'];
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    return product.images.filter(Boolean);
+  }
+  const single = product.imageUrl || product.image;
+  return single ? [single] : ['/images/products/placeholder.png'];
+}
+
+/**
+ * Get primary image URL for product cards, cart, and orders.
+ */
+export function getProductPrimaryImage(product) {
+  const list = getProductImages(product);
+  return list[0] || '/images/products/placeholder.png';
+}
+
+/**
+ * Safely delete an image from Firebase Storage if it matches a Storage URL.
+ */
+export async function deleteStorageImage(url) {
+  if (!url || typeof url !== 'string') return;
+  if (!url.includes('firebasestorage.googleapis.com') && !url.includes('storage.googleapis.com')) return;
+
+  try {
+    const fileRef = ref(storage, url);
+    await deleteObject(fileRef);
+    console.log('Successfully deleted file from Firebase Storage:', url);
+  } catch (error) {
+    console.warn('Could not delete Firebase Storage file (might already be deleted or restricted):', error);
+  }
+}
 
 /**
  * Fetch all products from Firestore.
@@ -128,9 +165,16 @@ export async function getProductById(id) {
 export async function addProduct(productData) {
   try {
     const productsRef = collection(db, PRODUCTS_COLLECTION);
+    const imagesList = Array.isArray(productData.images) && productData.images.length > 0 
+      ? productData.images 
+      : (productData.imageUrl ? [productData.imageUrl] : ['/images/products/placeholder.png']);
+
     const cleanData = {
       name: productData.name || '',
+      categoryId: productData.categoryId || null,
       category: productData.category || 'Other',
+      subCategoryId: productData.subCategoryId || null,
+      subCategory: productData.subCategory || null,
       price: Number(productData.price) || 0,
       displayQuantity: Number(productData.displayQuantity) || 1,
       displayUnit: productData.displayUnit || 'g',
@@ -147,7 +191,8 @@ export async function addProduct(productData) {
       marketer: productData.marketer || null,
       shelfLife: productData.shelfLife || null,
       disclaimer: productData.disclaimer || null,
-      imageUrl: productData.imageUrl || '/images/products/placeholder.png',
+      images: imagesList,
+      imageUrl: imagesList[0] || '/images/products/placeholder.png',
       active: productData.active !== undefined ? productData.active : true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -180,6 +225,10 @@ export async function updateProduct(id, productData) {
         : null;
     }
 
+    if (Array.isArray(updatePayload.images) && updatePayload.images.length > 0) {
+      updatePayload.imageUrl = updatePayload.images[0];
+    }
+
     await setDoc(docRef, updatePayload, { merge: true });
     return { id, ...updatePayload };
   } catch (error) {
@@ -210,13 +259,13 @@ export async function uploadProductImage(file, productId = 'new') {
 
   try {
     const fileExt = file.name.split('.').pop();
-    const fileName = `products/${productId}_${Date.now()}.${fileExt}`;
+    const fileName = `products/${productId}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
     const storageRef = ref(storage, fileName);
     await uploadBytes(storageRef, file);
     const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
   } catch (error) {
-    console.warn('Firebase Storage upload warning, using high-speed Data URL preview:', error);
+    console.warn('Firebase Storage upload warning:', error);
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -225,3 +274,4 @@ export async function uploadProductImage(file, productId = 'new') {
     });
   }
 }
+
