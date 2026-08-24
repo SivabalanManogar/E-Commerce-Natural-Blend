@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Leaf, ArrowRight, Layers, ArrowLeft, FolderTree, Package } from 'lucide-react';
-import { getAllCategories } from '../../services/categoryService';
-import { getAllSubcategories } from '../../services/subcategoryService';
-import { getAllProducts } from '../../services/productService';
+import { subscribeToCategories } from '../../services/categoryService';
+import { subscribeToSubcategories } from '../../services/subcategoryService';
+import { subscribeToProducts } from '../../services/productService';
 
 export default function CategoriesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,23 +15,25 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [catList, subList, prodList] = await Promise.all([
-          getAllCategories(),
-          getAllSubcategories(),
-          getAllProducts()
-        ]);
-        setCategories(catList.filter(c => c.active !== false));
-        setSubcategories(subList.filter(s => s.active !== false));
-        setProducts(prodList.filter(p => p.active !== false));
-      } catch (err) {
-        console.error('Error loading categories page:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    setLoading(true);
+    const unsubCats = subscribeToCategories((catList) => {
+      setCategories(catList.filter(c => c.active !== false));
+      setLoading(false);
+    });
+
+    const unsubSubCats = subscribeToSubcategories((subList) => {
+      setSubcategories(subList.filter(s => s.active !== false));
+    });
+
+    const unsubProds = subscribeToProducts((prodList) => {
+      setProducts(prodList.filter(p => p.active !== false));
+    });
+
+    return () => {
+      unsubCats();
+      unsubSubCats();
+      unsubProds();
+    };
   }, []);
 
   const selectedCategoryObj = categories.find(

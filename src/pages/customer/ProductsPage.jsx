@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search, Filter, RefreshCw, X, Package, ChevronRight, Home } from 'lucide-react';
 import ProductCard from '../../components/customer/ProductCard';
-import { getAllProducts } from '../../services/productService';
-import { getAllCategories } from '../../services/categoryService';
-import { getAllSubcategories } from '../../services/subcategoryService';
+import { subscribeToProducts } from '../../services/productService';
+import { subscribeToCategories } from '../../services/categoryService';
+import { subscribeToSubcategories } from '../../services/subcategoryService';
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,23 +22,25 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadCatalog() {
-      try {
-        const [prodList, catList, subList] = await Promise.all([
-          getAllProducts(),
-          getAllCategories(),
-          getAllSubcategories()
-        ]);
-        setProducts(prodList.filter(p => p.active !== false));
-        setCategories(catList.filter(c => c.active !== false));
-        setSubcategories(subList.filter(s => s.active !== false));
-      } catch (err) {
-        console.error('Error loading products page:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadCatalog();
+    setLoading(true);
+    const unsubProducts = subscribeToProducts((prodList) => {
+      setProducts(prodList.filter(p => p.active !== false));
+      setLoading(false);
+    });
+
+    const unsubCategories = subscribeToCategories((catList) => {
+      setCategories(catList.filter(c => c.active !== false));
+    });
+
+    const unsubSubcategories = subscribeToSubcategories((subList) => {
+      setSubcategories(subList.filter(s => s.active !== false));
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+      unsubSubcategories();
+    };
   }, []);
 
   // Synchronize state if URL query params change

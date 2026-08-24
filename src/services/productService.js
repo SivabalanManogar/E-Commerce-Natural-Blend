@@ -15,12 +15,94 @@ import {
   storage,
   ref,
   uploadBytes,
-  getDownloadURL,
+  onSnapshot,
   deleteObject
 } from '../firebase/config';
 import initialProductsData from '../data/initialProducts.json';
 
 const PRODUCTS_COLLECTION = 'products';
+
+/**
+ * Subscribe to all products in Firestore with real-time updates.
+ * Falls back to initialProductsData if Firestore is empty or offline.
+ */
+export function subscribeToProducts(callback) {
+  try {
+    const productsRef = collection(db, PRODUCTS_COLLECTION);
+    return onSnapshot(
+      productsRef,
+      (snapshot) => {
+        if (snapshot.empty) {
+          console.log('Firestore products collection empty in listener. Using initial catalog.');
+          callback(initialProductsData);
+          return;
+        }
+
+        const list = [];
+        snapshot.forEach((docSnap) => {
+          list.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        callback(list);
+      },
+      (error) => {
+        console.warn('Real-time products snapshot listener error:', error);
+        callback(initialProductsData);
+      }
+    );
+  } catch (error) {
+    console.warn('Error creating real-time products listener:', error);
+    callback(initialProductsData);
+    return () => {};
+  }
+}
+
+/**
+ * Subscribe to a single product document by ID with real-time updates.
+ */
+export function subscribeToProductById(id, callback) {
+  if (!id) {
+    callback(null);
+    return () => {};
+  }
+
+  const decodedId = decodeURIComponent(id);
+  const normalizedId = decodedId.replace(/\s+/g, '-');
+
+  try {
+    const docRef = doc(db, PRODUCTS_COLLECTION, decodedId);
+    return onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          callback({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          // Fallback to local catalog search
+          const match = initialProductsData.find(
+            p => p.id === decodedId || 
+                 p.id === id || 
+                 p.id === normalizedId || 
+                 p.id.replace(/-/g, ' ') === decodedId.replace(/-/g, ' ')
+          );
+          callback(match || null);
+        }
+      },
+      (error) => {
+        console.warn('Real-time product by id listener error:', error);
+        const match = initialProductsData.find(
+          p => p.id === decodedId || p.id === id || p.id === normalizedId
+        );
+        callback(match || null);
+      }
+    );
+  } catch (error) {
+    console.warn('Error creating real-time single product listener:', error);
+    const match = initialProductsData.find(
+      p => p.id === decodedId || p.id === id || p.id === normalizedId
+    );
+    callback(match || null);
+    return () => {};
+  }
+}
 
 /**
  * Get clean array of image URLs for a product with backward compatibility.

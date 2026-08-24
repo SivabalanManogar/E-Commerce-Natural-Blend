@@ -28,7 +28,7 @@ import {
   deleteSubcategory,
   subscribeToSubcategories
 } from '../../services/subcategoryService';
-import { getAllProducts } from '../../services/productService';
+import { getAllProducts, subscribeToProducts } from '../../services/productService';
 import { compressImageFile } from '../../utils/imageCompressor';
 
 export default function AdminCategoriesPage() {
@@ -81,10 +81,12 @@ export default function AdminCategoriesPage() {
     // Subscribe to realtime updates
     const unsubCat = subscribeToCategories((list) => setCategories(list));
     const unsubSub = subscribeToSubcategories((list) => setSubcategories(list));
+    const unsubProd = subscribeToProducts((list) => setProducts(list));
 
     return () => {
       if (unsubCat) unsubCat();
       if (unsubSub) unsubSub();
+      if (unsubProd) unsubProd();
     };
   }, []);
 

@@ -17,8 +17,8 @@ import {
   Droplets
 } from 'lucide-react';
 import ProductCard from '../../components/customer/ProductCard';
-import { getAllProducts } from '../../services/productService';
-import { getAllCategories } from '../../services/categoryService';
+import { subscribeToProducts } from '../../services/productService';
+import { subscribeToCategories } from '../../services/categoryService';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -26,21 +26,20 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [prodList, catList] = await Promise.all([
-          getAllProducts(),
-          getAllCategories()
-        ]);
-        setProducts(prodList.filter(p => p.active !== false));
-        setCategories(catList.filter(c => c.active !== false));
-      } catch (err) {
-        console.error('Error loading homepage data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    setLoading(true);
+    const unsubProds = subscribeToProducts((prodList) => {
+      setProducts(prodList.filter(p => p.active !== false));
+      setLoading(false);
+    });
+
+    const unsubCats = subscribeToCategories((catList) => {
+      setCategories(catList.filter(c => c.active !== false));
+    });
+
+    return () => {
+      unsubProds();
+      unsubCats();
+    };
   }, []);
 
   const featuredProducts = products.slice(0, 8);

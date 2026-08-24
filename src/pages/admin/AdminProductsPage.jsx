@@ -19,10 +19,11 @@ import {
   deleteProduct,
   uploadProductImage,
   getProductImages,
-  deleteStorageImage
+  deleteStorageImage,
+  subscribeToProducts
 } from '../../services/productService';
-import { getAllCategories } from '../../services/categoryService';
-import { getAllSubcategories } from '../../services/subcategoryService';
+import { getAllCategories, subscribeToCategories } from '../../services/categoryService';
+import { getAllSubcategories, subscribeToSubcategories } from '../../services/subcategoryService';
 import { compressImageFile, compressImageDataUrl } from '../../utils/imageCompressor';
 
 export default function AdminProductsPage() {
@@ -84,7 +85,25 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
-    loadCatalog();
+    setLoading(true);
+    const unsubProducts = subscribeToProducts((prodList) => {
+      setProducts(prodList);
+      setLoading(false);
+    });
+
+    const unsubCategories = subscribeToCategories((catList) => {
+      setCategories(catList);
+    });
+
+    const unsubSubcategories = subscribeToSubcategories((subList) => {
+      setSubcategories(subList);
+    });
+
+    return () => {
+      unsubProducts();
+      unsubCategories();
+      unsubSubcategories();
+    };
   }, []);
 
   const getMatchingSubcategories = (catId, catName) => {

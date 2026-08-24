@@ -24,7 +24,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { getProductById, getProductImages } from '../../services/productService';
+import { getProductById, getProductImages, subscribeToProductById } from '../../services/productService';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,17 +51,13 @@ export default function ProductDetailsPage() {
   const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
-    async function loadProduct() {
-      setLoading(true);
-      try {
-        const prod = await getProductById(id);
-        setProduct(prod);
-        setSelectedIdx(0);
+    setLoading(true);
+    const unsubscribe = subscribeToProductById(id, (prodData) => {
+      setProduct(prodData);
+      setLoading(false);
+    });
 
-        // Generate realistic Flipkart-style initial reviews for this product
-
-        // Generate realistic Flipkart-style initial reviews for this product
-        const initialReviews = [
+    const initialReviews = [
           {
             id: 'rev-1',
             userName: 'Ananya S.',
@@ -96,14 +92,8 @@ export default function ProductDetailsPage() {
             helpful: 6
           }
         ];
-        setReviews(initialReviews);
-      } catch (err) {
-        console.error('Error fetching product details:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProduct();
+    setReviews(initialReviews);
+    return () => unsubscribe();
   }, [id]);
 
   useEffect(() => {
