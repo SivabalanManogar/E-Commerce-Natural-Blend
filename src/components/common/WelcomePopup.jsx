@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { X, ShoppingBag, Leaf, ShieldCheck, Sparkles, Star, Award, Heart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -70,18 +71,19 @@ export default function WelcomePopup() {
   const firstName = rawName.trim().split(' ')[0];
   const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-overlay-fade overflow-y-auto"
+      className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-md overflow-y-auto animate-overlay-fade"
       onClick={handleClose}
       aria-modal="true"
       role="dialog"
     >
-      {/* Luxury Glassmorphism Herbal Welcome Card */}
-      <div 
-        className="relative w-full max-w-[92vw] sm:max-w-xl md:max-w-2xl bg-gradient-to-b from-white/95 via-[#F4F9F6]/95 to-[#EBF4F0]/95 backdrop-blur-2xl rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-8 md:p-10 border border-[#DCE6E0] shadow-2xl text-center text-[#17251F] animate-popup-scale my-auto max-h-[90vh] overflow-y-auto overflow-x-hidden selection:bg-[#176B4D] selection:text-white"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+        {/* Luxury Glassmorphism Herbal Welcome Card */}
+        <div 
+          className="relative z-[100000] w-full max-w-[92vw] sm:max-w-xl md:max-w-2xl bg-gradient-to-b from-white/95 via-[#F4F9F6]/95 to-[#EBF4F0]/95 backdrop-blur-2xl rounded-3xl sm:rounded-[2.5rem] p-5 sm:p-8 md:p-10 border border-[#DCE6E0] shadow-2xl text-center text-[#17251F] animate-popup-scale my-8 overflow-hidden selection:bg-[#176B4D] selection:text-white text-left"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* ================= FLOATING ANIMATED SMALL LEAVES & BOTANICAL ELEMENTS ================= */}
         {/* Top-Left Floating Leaf */}
         <div className="absolute -top-1 -left-1 sm:top-4 sm:left-6 text-3xl sm:text-4xl select-none pointer-events-none animate-float-natural-1 filter drop-shadow-md z-10" title="Leaf">
@@ -212,5 +214,7 @@ export default function WelcomePopup() {
         </div>
       </div>
     </div>
-  );
+  </div>,
+  document.body
+);
 }

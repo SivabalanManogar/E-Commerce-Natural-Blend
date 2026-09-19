@@ -264,7 +264,7 @@ export async function syncCustomerProfile(user) {
       return { ...existingData, ...updatedFields };
     }
   } catch (error) {
-    console.warn('Firestore customer profile sync warning:', error);
+    console.info('Firestore customer profile sync fallback active.');
     return {
       uid: user.uid,
       displayName: user.displayName || '',

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /categories
+Allow: /product/
+Allow: /contact
+
+Disallow: /cart
+Disallow: /checkout
+Disallow: /login
+Disallow: /profile
+Disallow: /my-orders
+Disallow: /admin
+Disallow: /admin/
+
+Sitemap: https://natural-blend-c0935.web.app/sitemap.xml

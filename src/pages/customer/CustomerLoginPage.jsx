@@ -206,7 +206,7 @@ export default function CustomerLoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 animate-liquid-gradient overflow-hidden relative font-sans text-[#17251F]">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 py-8 animate-liquid-gradient overflow-y-auto relative font-sans text-[#17251F]">
 
       {/* Animated Background Blobs */}
       <div className="absolute -top-24 -right-24 w-[30rem] h-[30rem] bg-[#176B4D]/15 rounded-full blur-[90px] pointer-events-none animate-blob-1" />
@@ -214,7 +214,7 @@ export default function CustomerLoginPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-white/40 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Login / Verification Card Panel */}
-      <div className="bg-white/95 rounded-[2.5rem] p-6 sm:p-10 border border-[#DCE6E0] shadow-2xl w-full max-w-md space-y-6 relative z-10 text-[#17251F] backdrop-blur-2xl">
+      <div className="bg-white/95 rounded-[2.5rem] p-6 sm:p-10 border border-[#DCE6E0] shadow-2xl w-full max-w-md space-y-6 relative z-10 text-[#17251F] backdrop-blur-2xl my-auto max-h-[90vh] overflow-y-auto">
 
         {/* Top Link & Badge */}
         <div className="flex items-center justify-between border-b border-[#DCE6E0] pb-4">

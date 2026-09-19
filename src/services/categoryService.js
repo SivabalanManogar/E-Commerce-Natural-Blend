@@ -55,10 +55,12 @@ export function subscribeToCategories(callback) {
       });
       callback(list);
     }, (err) => {
-      console.warn('Categories subscription error:', err);
+      console.warn('Categories subscription warning:', err);
+      callback(initialCategoriesData);
     });
   } catch (err) {
-    console.error('Failed to subscribe to categories:', err);
+    console.warn('Failed to subscribe to categories:', err);
+    callback(initialCategoriesData);
     return () => {};
   }
 }

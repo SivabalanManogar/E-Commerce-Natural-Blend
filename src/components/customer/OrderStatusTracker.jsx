@@ -15,11 +15,11 @@ export default function OrderStatusTracker({ status, updatedAt }) {
   }
 
   const steps = [
-    { key: 'Pending', label: 'Order Placed', icon: Clock },
-    { key: 'Confirmed', label: 'Confirmed', icon: CheckCircle2 },
-    { key: 'Packed', label: 'Packed', icon: PackageCheck },
-    { key: 'Out for Delivery', label: 'Out for Delivery', icon: Truck },
-    { key: 'Delivered', label: 'Delivered', icon: CheckCircle2 }
+    { key: 'Pending', label: 'Placed', fullLabel: 'Order Placed', icon: Clock },
+    { key: 'Confirmed', label: 'Confirmed', fullLabel: 'Confirmed', icon: CheckCircle2 },
+    { key: 'Packed', label: 'Packed', fullLabel: 'Packed', icon: PackageCheck },
+    { key: 'Out for Delivery', label: 'Dispatched', fullLabel: 'Out for Delivery', icon: Truck },
+    { key: 'Delivered', label: 'Delivered', fullLabel: 'Delivered', icon: CheckCircle2 }
   ];
 
   const getStepIndex = (st) => {
@@ -37,16 +37,16 @@ export default function OrderStatusTracker({ status, updatedAt }) {
   const isDelivered = status === 'Delivered';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-sans">
       {/* Progress Bar Steps */}
-      <div className="relative flex items-center justify-between">
-        {/* Background track line */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 z-0" />
+      <div className="relative flex items-start justify-between pt-1">
+        {/* Background track line - anchored exactly to circle icon center */}
+        <div className="absolute left-[10%] right-[10%] top-[14px] sm:top-[18px] h-1 bg-slate-200 z-0" />
 
         {/* Active progress line */}
         <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-emerald-600 transition-all duration-500 z-0"
-          style={{ width: `${(currentIndex / (steps.length - 1)) * 100}%` }}
+          className="absolute left-[10%] top-[14px] sm:top-[18px] h-1 bg-emerald-600 transition-all duration-500 z-0"
+          style={{ width: `${(currentIndex / (steps.length - 1)) * 80}%` }}
         />
 
         {steps.map((step, idx) => {
@@ -55,18 +55,19 @@ export default function OrderStatusTracker({ status, updatedAt }) {
           const StepIcon = step.icon;
 
           return (
-            <div key={step.key} className="relative z-10 flex flex-col items-center group">
+            <div key={step.key} className="relative z-10 flex flex-col items-center group flex-1 min-w-0">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isDone
-                    ? 'bg-emerald-600 text-white ring-4 ring-emerald-100 shadow-xs'
+                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isDone
+                    ? 'bg-emerald-600 text-white ring-2 sm:ring-4 ring-emerald-100 shadow-xs'
                     : 'bg-white border-2 border-slate-300 text-slate-400'
                   }`}
               >
-                {isDone ? <Check className="w-5 h-5" /> : <StepIcon className="w-4 h-4" />}
+                {isDone ? <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5" /> : <StepIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
               </div>
-              <span className={`text-[11px] font-bold mt-2 text-center max-w-[70px] ${isCurrent ? 'text-emerald-800 font-extrabold' : isDone ? 'text-slate-700' : 'text-slate-400'
+              <span className={`text-[9px] sm:text-[11px] font-bold mt-1.5 text-center leading-tight px-0.5 ${isCurrent ? 'text-emerald-800 font-extrabold' : isDone ? 'text-slate-700' : 'text-slate-400'
                 }`}>
-                {step.label}
+                <span className="sm:hidden block truncate">{step.label}</span>
+                <span className="hidden sm:inline">{step.fullLabel}</span>
               </span>
             </div>
           );
@@ -76,11 +77,11 @@ export default function OrderStatusTracker({ status, updatedAt }) {
       {/* Completion Banner */}
       {isDelivered && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center animate-fade-in">
-          <p className="text-sm font-extrabold text-emerald-900">
+          <p className="text-xs sm:text-sm font-extrabold text-emerald-900">
             Your order has been delivered ✅
           </p>
           {updatedAt && (
-            <p className="text-xs text-emerald-700 mt-0.5">
+            <p className="text-[10px] sm:text-xs text-emerald-700 mt-0.5">
               Delivered on: {new Date(updatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
             </p>
           )}

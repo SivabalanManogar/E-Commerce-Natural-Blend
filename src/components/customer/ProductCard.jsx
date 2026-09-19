@@ -71,8 +71,8 @@ export default function ProductCard({ product }) {
       </Link>
 
       {/* Card Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-        <div className="space-y-1.5">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3">
+        <div className="space-y-1 sm:space-y-1.5">
           {/* Flipkart Style Rating Pill */}
           <div className="flex items-center gap-1.5">
             <span className="bg-[#176B4D] text-white text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-xs">
@@ -90,34 +90,60 @@ export default function ProductCard({ product }) {
           </Link>
 
           {quantityLabel && (
-            <p className="text-[11px] font-medium text-[#64756D]">
+            <p className="text-[10px] sm:text-[11px] font-medium text-[#64756D]">
               Net Qty: <span className="text-[#0D4A35] font-bold">{quantityLabel}</span>
             </p>
           )}
         </div>
 
-        {/* Price & Single Buy Product Action Button */}
+        {/* Price & Dual Action Buttons */}
         <div className="pt-2 border-t border-[#DCE6E0] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-[#64756D] font-bold">Price (Inclusive taxes)</span>
-            <span className="text-base font-black text-[#0D4A35]">
+          <div className="flex items-baseline justify-between gap-1">
+            <span className="text-[10px] sm:text-xs text-[#64756D] font-bold truncate">Price (Incl. taxes)</span>
+            <span className="text-sm sm:text-base font-black text-[#0D4A35] shrink-0">
               ₹{product.price}
             </span>
           </div>
 
-          {/* Full-width Buy Product Action Button */}
-          <div className="pt-1">
+          {/* Dual Action Buttons: Stacked on Mobile (Top/Bottom), Side-by-Side on Desktop */}
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-1.5 pt-0.5">
+            {/* Add to Cart Button (Top on Mobile, Left on Desktop) */}
+            <button
+              onClick={handleAdd}
+              disabled={isOutOfStock}
+              className={`w-full py-2 sm:py-2 px-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 border shadow-2xs active:scale-95 ${added
+                ? 'bg-[#0D4A35] text-white border-[#0D4A35]'
+                : isOutOfStock
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200'
+                  : 'bg-white hover:bg-[#DDEFE6] text-[#176B4D] border-[#176B4D]/40'
+                }`}
+              title="Add to Cart"
+            >
+              {added ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-white shrink-0" />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5 text-[#176B4D] shrink-0" />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+
+            {/* Buy Now Button (Bottom on Mobile, Right on Desktop) */}
             <button
               onClick={handleBuyProduct}
               disabled={isOutOfStock}
-              className={`w-full py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-98 ${isOutOfStock
+              className={`w-full py-2 sm:py-2 px-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-xs active:scale-95 ${isOutOfStock
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 : 'bg-[#176B4D] hover:bg-[#0D4A35] text-white'
                 }`}
-              title="Buy Product"
+              title="Buy Now"
             >
-              <Zap className="w-4 h-4 fill-[#C89B3C] text-[#C89B3C]" />
-              <span>Buy Product</span>
+              <Zap className="w-3.5 h-3.5 fill-[#C89B3C] text-[#C89B3C] shrink-0" />
+              <span>Buy Now</span>
             </button>
           </div>
         </div>

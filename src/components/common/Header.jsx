@@ -16,10 +16,12 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import AuthModal from './AuthModal';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [avatarErr, setAvatarErr] = useState(false);
 
@@ -70,8 +72,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 sm:h-20">
 
           {/* Logo Branding */}
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white p-0.5 shadow-md border-2 border-[#176B4D]/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white p-0.5 shadow-md border-2 border-[#176B4D]/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <img
                 src="/logo.png"
                 alt="Natural Blend Logo"
@@ -79,10 +81,10 @@ export default function Header() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-base sm:text-xl font-black text-[#0D4A35] tracking-tight leading-none">
+              <span className="text-sm sm:text-xl font-black text-[#0D4A35] tracking-tight leading-none">
                 Natural <span className="text-[#176B4D]">Blend</span>
               </span>
-              <span className="text-[10px] font-extrabold text-[#64756D] tracking-wide mt-0.5">
+              <span className="hidden sm:block text-[10px] font-extrabold text-[#64756D] tracking-wide mt-0.5">
                 Authentic Herbal Care
               </span>
             </div>
@@ -125,7 +127,7 @@ export default function Header() {
           </nav>
 
           {/* Customer Account Indicator, Cart Icon & Mobile Menu Trigger */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
 
             {/* Account / User Indicator */}
             {isCustomerLoggedIn ? (
@@ -193,12 +195,12 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-xs"
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-xs"
               >
                 Login
-              </Link>
+              </button>
             )}
 
             {/* Cart Button */}
@@ -228,7 +230,7 @@ export default function Header() {
         </div>
 
         {/* Mobile Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="mt-3 md:hidden">
+        <form onSubmit={handleSearchSubmit} className="mt-2.5 mb-2 md:hidden">
           <div className="relative w-full">
             <input
               type="text"
@@ -263,7 +265,7 @@ export default function Header() {
               {link.name}
             </Link>
           ))}
-          {isCustomerLoggedIn && (
+          {isCustomerLoggedIn ? (
             <Link
               to="/profile"
               onClick={() => setMobileMenuOpen(false)}
@@ -271,6 +273,16 @@ export default function Header() {
             >
               My Profile
             </Link>
+          ) : (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setAuthModalOpen(true);
+              }}
+              className="w-full text-left block px-3 py-2 rounded-lg font-bold text-emerald-700 hover:bg-emerald-50"
+            >
+              Login / Sign Up
+            </button>
           )}
           {isCustomerLoggedIn && (
             <button
@@ -282,6 +294,12 @@ export default function Header() {
           )}
         </div>
       )}
+
+      {/* Reusable Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </header>
   );
 }

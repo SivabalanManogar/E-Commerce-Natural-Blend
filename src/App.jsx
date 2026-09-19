@@ -111,16 +111,18 @@ export default function App() {
               {/* Public Customer Login */}
               <Route path="/login" element={<CustomerLoginPage />} />
 
-              {/* Protected Customer Routes */}
-              <Route path="/" element={<ProtectedCustomerRoute><HomePage /></ProtectedCustomerRoute>} />
-              <Route path="/categories" element={<ProtectedCustomerRoute><CategoriesPage /></ProtectedCustomerRoute>} />
-              <Route path="/products" element={<ProtectedCustomerRoute><ProductsPage /></ProtectedCustomerRoute>} />
-              <Route path="/product/:id" element={<ProtectedCustomerRoute><ProductDetailsPage /></ProtectedCustomerRoute>} />
-              <Route path="/cart" element={<ProtectedCustomerRoute><CartPage /></ProtectedCustomerRoute>} />
-              <Route path="/checkout" element={<ProtectedCustomerRoute><CheckoutPage /></ProtectedCustomerRoute>} />
+              {/* Public Customer Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/product/:id" element={<ProductDetailsPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+
+              {/* Protected Personal Customer Routes */}
               <Route path="/my-orders" element={<ProtectedCustomerRoute><MyOrdersPage /></ProtectedCustomerRoute>} />
               <Route path="/profile" element={<ProtectedCustomerRoute><CustomerProfilePage /></ProtectedCustomerRoute>} />
-              <Route path="/contact" element={<ProtectedCustomerRoute><ContactPage /></ProtectedCustomerRoute>} />
 
               {/* Standalone Admin Login */}
               <Route path="/admin/login" element={<AdminLoginPage />} />
